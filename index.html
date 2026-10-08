@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>AI Council Orchestrator (Dynamic)</title>
+	<title>AI Council Orchestrator</title>
 	<script src="https://cdn.tailwindcss.com"></script>
 	<style>
 		@keyframes pulse-fast {
@@ -29,18 +29,24 @@
 		details > summary::-webkit-details-marker { display: none; }
 	</style>
 </head>
-<body class="bg-slate-900 text-slate-300 font-sans min-h-screen pb-12 transition-colors duration-200">
+<body class="bg-slate-900 text-slate-300 font-sans min-h-screen pb-6 transition-colors duration-200">
 	
 	<!-- App Wrapper -->
-	<div class="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+	<div class="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
 		
 		<!-- Header & Controls -->
-		<header class="flex justify-between items-center bg-slate-800 p-5 rounded-xl shadow-lg border border-slate-700">
+		<header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800 p-5 rounded-xl shadow-lg border border-slate-700 mb-6 gap-4">
 			<div>
 				<h1 class="text-2xl font-bold text-slate-100 tracking-tight">AI Council Orchestrator</h1>
-				<p class="text-sm text-slate-400">Dynamic Agent Routing Architecture</p>
+				<p class="text-sm text-slate-400">Dynamic Multi-Turn Agent Routing</p>
 			</div>
-			<div class="flex gap-2">
+			<div class="flex flex-wrap gap-2">
+				<button onclick="startNewDebate()" class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+					➕ New Debate
+				</button>
+				<button onclick="exportCurrentDebate()" class="px-4 py-2 bg-slate-700 text-emerald-400 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors shadow-sm" title="Export Full Session (.md)">
+					💾 Export
+				</button>
 				<button id="toggleHistoryBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors shadow-sm">
 					📚 History
 				</button>
@@ -51,7 +57,7 @@
 		</header>
 
 		<!-- History Panel -->
-		<div id="historyPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-4">
+		<div id="historyPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 mb-6 space-y-4">
 			<div class="flex justify-between items-center border-b border-slate-700 pb-2">
 				<h2 class="text-xl font-bold text-slate-100">Debate History</h2>
 				<button id="clearHistoryBtn" class="text-red-400 hover:text-red-300 text-sm font-semibold">Clear All</button>
@@ -60,7 +66,7 @@
 		</div>
 
 		<!-- Settings Panel -->
-		<div id="settingsPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-6">
+		<div id="settingsPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 mb-6 space-y-6">
 			<h2 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-2">Configuration & API Keys</h2>
 			
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -88,7 +94,6 @@
 						<span class="w-6 h-6 rounded bg-purple-900 text-purple-300 flex items-center justify-center text-sm">0</span>
 						Casting Director Protocol (Phase 0)
 					</label>
-					<p class="text-sm text-slate-400 mb-2">This agent dynamically generates the 4 council members based on the user's prompt.</p>
 					<textarea id="directorPrompt" rows="4" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
 				</div>
 				<div>
@@ -108,10 +113,13 @@
 			</div>
 		</div>
 
-		<!-- Main Input Area -->
-		<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+		<!-- Chat Log Area (Scrollable) -->
+		<div id="chatLog" class="flex flex-col gap-6 mb-6 flex-1 hidden"></div>
+
+		<!-- Main Input Area (Sticky Bottom) -->
+		<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 sticky bottom-4 z-10">
 			<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-				<label class="text-lg font-bold text-slate-100">Issue to the Council</label>
+				<label class="text-lg font-bold text-slate-100">Speak to the Council</label>
 				<div class="flex gap-2 w-full md:w-auto">
 					<select id="activeProvider" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:flex-none">
 						<option value="openai">OpenAI</option>
@@ -125,92 +133,52 @@
 			</div>
 
 			<div class="flex flex-col gap-4">
-				<textarea id="userPrompt" rows="3" placeholder="State your premise, dilemma, or question..." class="w-full p-4 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-500"></textarea>
+				<textarea id="userPrompt" rows="3" placeholder="State your premise, dilemma, or follow-up argument..." class="w-full p-4 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-500"></textarea>
 				<button id="submitBtn" class="w-full py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition-colors disabled:opacity-50 shadow-lg text-lg">
 					Convene Council
 				</button>
 			</div>
 		</div>
 
-		<!-- Final Executive Output -->
-		<div id="executiveContainer" class="hidden bg-slate-800 p-6 md:p-8 rounded-xl shadow-lg border border-emerald-900/50 mt-8 relative">
-			<div class="flex justify-between items-start mb-6 border-b border-slate-700 pb-3">
-				<div class="flex items-center gap-3">
-					<h2 class="text-2xl font-bold text-emerald-400 tracking-tight">Executive Summary</h2>
-					<span id="executiveIndicator" class="w-3 h-3 rounded-full bg-emerald-500 hidden"></span>
-				</div>
-				<div class="flex gap-2">
-					<button onclick="copyRawText('executiveRaw')" class="text-slate-400 hover:text-white transition-colors p-2" title="Copy Summary">📋</button>
-					<button onclick="exportCurrentDebate()" class="text-slate-400 hover:text-emerald-400 transition-colors p-2" title="Export Full Debate (.md)">💾</button>
-				</div>
-			</div>
-			<div id="executiveOutput" class="markdown-content text-slate-200 text-lg leading-relaxed"></div>
-		</div>
-
-		<!-- Detailed Audit Log -->
-		<details id="auditLogContainer" class="hidden bg-slate-800 rounded-xl shadow-lg border border-slate-700 mt-6 group">
-			<summary class="p-5 font-bold text-slate-300 cursor-pointer flex justify-between items-center hover:bg-slate-700/50 transition-colors rounded-xl">
-				<span class="flex items-center gap-2">
-					<span class="text-slate-500 group-open:rotate-90 transition-transform">▶</span>
-					View Detailed Council Audit & Transcripts
-				</span>
-			</summary>
-			
-			<div class="p-6 border-t border-slate-700 space-y-8">
-				<div class="bg-slate-900 p-6 rounded-xl border border-blue-900/30 relative">
-					<div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
-						<h3 class="font-bold text-blue-400 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('synthesis')">
-							<span class="text-xs text-slate-500 w-3 text-center" id="icon-synthesis">▼</span>
-							Moderator Synthesis (Phase 2)
-						</h3>
-						<button onclick="copyRawText('synthesisRaw')" class="text-slate-400 hover:text-white transition-colors">📋</button>
-					</div>
-					<div id="content-synthesis" class="markdown-content text-slate-400 text-sm leading-relaxed overflow-hidden transition-all"></div>
-				</div>
-
-				<div>
-					<h3 class="text-lg font-bold text-slate-300 mb-4 px-1">Raw Dynamic Council Outputs (Phase 1)</h3>
-					<div id="debateGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-				</div>
-			</div>
-		</details>
-
 	</div>
 
 	<script>
+		// --- Model Definitions (Updated for late 2026) ---
 		const providerModels = {
-			'openai': ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
-			'anthropic': ['claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
-			'gemini': ['gemini-1.5-pro', 'gemini-1.5-flash'],
-			'deepseek': ['deepseek-chat', 'deepseek-coder']
+			'openai': ['gpt-6-luna', 'gpt-6.1-sol', 'gpt-5.6-terra', 'gpt-4o', 'gpt-4o-mini'],
+			'anthropic': ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-fable-5-1', 'claude-haiku-4-5-20251001'],
+			'gemini': ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-3.8-live', 'gemini-3.1-pro'],
+			'deepseek': ['deepseek-flash', 'deepseek-chat']
 		};
 
-		const defaultDirectorPrompt = `You are the Council Casting Director. Read the user's premise and determine the 4 most critical, specialized expert personas needed to analyze it from diverse, adversarial angles. One persona MUST ALWAYS be a ruthless 'Red Teamer' or 'Saboteur'. 
+		// --- State & Strict Brevity Prompts ---
+		const defaultDirectorPrompt = `You are the Council Casting Director. Read the user's premise and the conversation history. Determine the 2 to 4 most critical, specialized expert personas needed to analyze it. One persona MUST ALWAYS be a ruthless 'Red Teamer'. 
 
-Output ONLY a JSON array of objects. Do not include markdown code blocks, intro text, or conversational filler. The output must be perfectly parseable by JSON.parse().
+CRITICAL INSTRUCTION: Enforce strict brevity. You must explicitly instruct every expert to limit their response to 1-2 short paragraphs maximum.
+
+Output ONLY a JSON array of objects. Do not include markdown blocks, intro text, or conversational filler. The output must be perfectly parseable by JSON.parse().
 Format:
 [
   {
-    "name": "Title of Expert (e.g., Orbital Economist)",
-    "prompt": "You are the [Title]. Your job is to... [Give strict conditioning rules, e.g., 'Provide only verified data', 'Focus on game theory', 'Attack the premise']. Do not hallucinate."
+    "name": "Title of Expert",
+    "prompt": "You are the [Title]... [Strict rules]. Limit your response to 1-2 paragraphs max."
   }
 ]`;
 
 		const state = {
 			provider: 'openai',
-			model: 'gpt-4o',
+			model: 'gpt-6-luna',
 			isCustomModel: false,
 			apiKeys: { openai: '', anthropic: '', gemini: '', deepseek: '' },
 			directorPrompt: defaultDirectorPrompt,
-			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree, highlight unresolvable disagreements, and provide a final executive summary. Audit the logic. Point out if critical information is missing.",
-			communicatorPrompt: "You are the Executive Communicator. Translate the Moderator's technical Synthesis into a clear, succinct summary. Give the bottom-line answer, core risks, and final verdict in plain language. Use bullets.",
+			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree and disagree. CRITICAL: Be extremely concise. Limit your audit to 2-3 short paragraphs total. Point out missing context quickly.",
+			communicatorPrompt: "You are the Executive Communicator. Translate the Moderator's Synthesis into a highly succinct chatbot-style response. Just give the bottom-line answer and core risks. Use 2-3 short bullet points max. Be fast and brief.",
 			history: [],
+			currentSessionId: null,
 			isRunning: false
 		};
 
-		window.rawOutputs = { executiveRaw: "", synthesisRaw: "" };
-		window.currentDebateData = null;
-
+		// --- DOM Elements ---
 		const els = {
 			toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
 			settingsPanel: document.getElementById('settingsPanel'),
@@ -234,14 +202,10 @@ Format:
 			overseerPrompt: document.getElementById('overseerPrompt'),
 			communicatorPrompt: document.getElementById('communicatorPrompt'),
 			
-			executiveContainer: document.getElementById('executiveContainer'),
-			executiveOutput: document.getElementById('executiveOutput'),
-			executiveIndicator: document.getElementById('executiveIndicator'),
-			auditLogContainer: document.getElementById('auditLogContainer'),
-			contentSynthesis: document.getElementById('content-synthesis'),
-			debateGrid: document.getElementById('debateGrid')
+			chatLog: document.getElementById('chatLog')
 		};
 
+		// --- LocalStorage Management ---
 		function saveState() {
 			const toSave = {
 				provider: state.provider,
@@ -253,11 +217,11 @@ Format:
 				communicatorPrompt: state.communicatorPrompt,
 				history: state.history
 			};
-			localStorage.setItem('ai_council_data_v5', JSON.stringify(toSave));
+			localStorage.setItem('ai_council_data_v6', JSON.stringify(toSave));
 		}
 
 		function loadState() {
-			const saved = localStorage.getItem('ai_council_data_v5') || localStorage.getItem('ai_council_data_v4');
+			const saved = localStorage.getItem('ai_council_data_v6') || localStorage.getItem('ai_council_data_v5');
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				state.provider = parsed.provider || state.provider;
@@ -327,7 +291,9 @@ Format:
 			});
 			els.clearHistoryBtn.addEventListener('click', () => {
 				if(confirm("Clear all debate history?")) {
-					state.history = []; saveState(); renderHistory();
+					state.history = []; state.currentSessionId = null; 
+					els.chatLog.innerHTML = ''; els.chatLog.classList.add('hidden');
+					saveState(); renderHistory();
 				}
 			});
 
@@ -367,121 +333,141 @@ Format:
 			});
 		}
 
+		window.startNewDebate = () => {
+			state.currentSessionId = null;
+			els.chatLog.innerHTML = '';
+			els.chatLog.classList.add('hidden');
+			els.userPrompt.value = '';
+		};
+
 		function renderHistory() {
 			els.historyList.innerHTML = '';
 			if(state.history.length === 0) {
 				els.historyList.innerHTML = '<p class="text-slate-500 italic text-sm">No past debates found.</p>';
 				return;
 			}
-			[...state.history].reverse().forEach((item) => {
-				const date = new Date(item.timestamp).toLocaleString();
+			[...state.history].reverse().forEach((session) => {
+				const date = new Date(session.id).toLocaleString();
 				const row = document.createElement('div');
 				row.className = 'p-3 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 transition-colors';
-				row.innerHTML = `<div class="text-xs text-slate-500 mb-1">${date}</div><div class="text-sm text-slate-200 font-semibold truncate">${item.prompt}</div>`;
-				row.addEventListener('click', () => loadHistoryItem(item));
+				row.innerHTML = `<div class="text-xs text-slate-500 mb-1">${date}</div><div class="text-sm text-slate-200 font-semibold truncate">${session.title}</div>`;
+				row.addEventListener('click', () => loadHistorySession(session));
 				els.historyList.appendChild(row);
 			});
 		}
 
-		window.toggleCollapse = (id) => {
-			const contentDiv = document.getElementById(`content-${id}`);
-			const icon = document.getElementById(`icon-${id}`);
-			if (contentDiv.classList.contains('hidden')) {
-				contentDiv.classList.remove('hidden'); icon.innerText = '▼';
-			} else {
-				contentDiv.classList.add('hidden'); icon.innerText = '▶';
-			}
-		};
-
-		window.copyRawText = (mapKey) => {
-			const text = window.rawOutputs[mapKey];
-			if(text) navigator.clipboard.writeText(text);
-		};
-
 		window.exportCurrentDebate = () => {
-			if (!window.currentDebateData) return;
-			const d = window.currentDebateData;
-			let markdown = `# AI Council Debate Export\n\n**Date:** ${new Date(d.timestamp).toLocaleString()}\n**Provider/Model:** ${d.provider} (${d.model})\n\n---\n\n## 📝 User Prompt\n\n${d.prompt}\n\n---\n\n## 🎯 Phase 3: Executive Summary\n\n${d.executive}\n\n---\n\n## ⚖️ Phase 2: Moderator Synthesis & Audit\n\n${d.synthesis}\n\n---\n\n## 🗣️ Phase 1: Raw Dynamic Council Transcripts\n\n`;
-			d.council.forEach(member => { markdown += `### [ ${member.name} ]\n\n${member.raw}\n\n`; });
+			let session = state.history.find(s => s.id === state.currentSessionId);
+			if (!session || session.turns.length === 0) return alert("No active debate to export.");
+			
+			let markdown = `# AI Council Debate Export\n\n**Date:** ${new Date(session.id).toLocaleString()}\n\n---\n\n`;
+			
+			session.turns.forEach((turn, idx) => {
+				markdown += `## 💬 Turn ${idx + 1}: User Prompt\n\n${turn.userPrompt}\n\n`;
+				markdown += `### 🎯 Executive Summary\n\n${turn.executive}\n\n`;
+				markdown += `### ⚖️ Moderator Synthesis\n\n${turn.synthesis}\n\n`;
+				markdown += `### 🗣️ Council Transcripts\n\n`;
+				turn.council.forEach(c => {
+					markdown += `#### [ ${c.name} ]\n\n${c.raw}\n\n`;
+				});
+				markdown += `---\n\n`;
+			});
+
 			const blob = new Blob([markdown], { type: 'text/markdown' });
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
-			a.href = url; a.download = `dynamic_council_${d.timestamp}.md`;
+			a.href = url; a.download = `council_session_${session.id}.md`;
 			document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 		};
 
-		function loadHistoryItem(item) {
-			window.currentDebateData = item;
-			els.userPrompt.value = item.prompt;
-			els.debateGrid.innerHTML = '';
+		function loadHistorySession(session) {
+			state.currentSessionId = session.id;
+			els.chatLog.innerHTML = '';
+			els.chatLog.classList.remove('hidden');
 			
-			item.council.forEach((memberResp, idx) => {
-				window.rawOutputs[`member-${idx}`] = memberResp.raw;
-				const box = createMemberBox(idx, memberResp.name, memberResp.prompt);
-				els.debateGrid.appendChild(box);
-				const contentDiv = document.getElementById(`content-${idx}`);
-				contentDiv.innerHTML = `<p>${formatMarkdown(memberResp.raw)}</p>`;
-				contentDiv.classList.remove('italic', 'text-slate-500');
-				contentDiv.classList.add('text-slate-300');
-				document.getElementById(`indicator-${idx}`).classList.replace('bg-purple-500', 'bg-slate-600');
+			session.turns.forEach((turn) => {
+				renderCompletedTurn(turn);
 			});
 
-			els.executiveContainer.classList.remove('hidden');
-			window.rawOutputs['executiveRaw'] = item.executive;
-			els.executiveOutput.innerHTML = `<p>${formatMarkdown(item.executive)}</p>`;
-
-			els.auditLogContainer.classList.remove('hidden');
-			els.auditLogContainer.removeAttribute('open'); 
-			window.rawOutputs['synthesisRaw'] = item.synthesis;
-			els.contentSynthesis.innerHTML = `<p>${formatMarkdown(item.synthesis)}</p>`;
-			els.contentSynthesis.classList.remove('italic', 'text-slate-500');
-			els.contentSynthesis.classList.add('text-slate-300');
-
 			els.historyPanel.classList.add('hidden');
+			window.scrollTo(0, document.body.scrollHeight);
 		}
 
-		function createMemberBox(id, name, systemPrompt) {
-			const box = document.createElement('div');
-			box.className = 'p-5 bg-slate-900 rounded-xl border border-slate-700 shadow-sm flex flex-col h-full transition-all';
-			box.innerHTML = `
-				<div class="flex flex-col border-b border-slate-800 pb-3 mb-4 gap-2">
-					<div class="flex justify-between items-center">
-						<h3 class="font-bold text-slate-100 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('${id}')">
-							<span class="text-xs text-slate-400 w-3 text-center" id="icon-${id}">▼</span>
-							<span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse-fast inline-block" id="indicator-${id}"></span>
-							<span class="tracking-wide">${name}</span>
-						</h3>
-						<button onclick="copyRawText('member-${id}')" class="text-slate-400 hover:text-white transition-colors" title="Copy Text">📋</button>
-					</div>
-					<div class="text-xs text-slate-500 font-mono bg-slate-950 p-2 rounded overflow-hidden text-ellipsis whitespace-nowrap" title="${systemPrompt.replace(/"/g, '&quot;')}">
-						<span class="text-purple-400">System:</span> ${systemPrompt}
+		function renderCompletedTurn(turn) {
+			// User Bubble
+			els.chatLog.insertAdjacentHTML('beforeend', `
+				<div class="flex justify-end">
+					<div class="bg-blue-600 text-white p-4 rounded-xl max-w-3xl shadow-sm text-sm">
+						${formatMarkdown(turn.userPrompt)}
 					</div>
 				</div>
-				<div id="content-${id}" class="markdown-content text-sm text-slate-400 italic flex-1 overflow-hidden transition-all">Formulating argument...</div>
+			`);
+
+			// Council Response Block
+			const turnHtml = `
+				<div class="flex justify-start">
+					<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-emerald-900/50 w-full relative">
+						<div class="flex justify-between items-start mb-4">
+							<h2 class="text-xl font-bold text-emerald-400 tracking-tight">Council Verdict</h2>
+						</div>
+						<div class="markdown-content text-slate-200 text-base leading-relaxed">${formatMarkdown(turn.executive)}</div>
+						
+						<details class="mt-6 group border-t border-slate-700 pt-4">
+							<summary class="text-sm font-bold text-slate-400 cursor-pointer flex items-center gap-2 hover:text-slate-200 transition-colors">
+								<span class="group-open:rotate-90 transition-transform">▶</span> View Audit & Transcripts
+							</summary>
+							
+							<div class="mt-6 space-y-6">
+								<div class="bg-slate-900 p-5 rounded-xl border border-blue-900/30">
+									<h3 class="font-bold text-blue-400 mb-3 text-sm">Moderator Synthesis (Phase 2)</h3>
+									<div class="markdown-content text-sm text-slate-400 leading-relaxed">${formatMarkdown(turn.synthesis)}</div>
+								</div>
+				
+								<div>
+									<h3 class="font-bold text-slate-300 mb-3 text-sm">Dynamic Council (Phase 1)</h3>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										${turn.council.map(c => `
+											<div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+												<h4 class="font-bold text-purple-400 text-sm mb-2">${c.name}</h4>
+												<div class="markdown-content text-xs text-slate-400 leading-relaxed">${formatMarkdown(c.raw)}</div>
+											</div>
+										`).join('')}
+									</div>
+								</div>
+							</div>
+						</details>
+					</div>
+				</div>
 			`;
-			return box;
+			els.chatLog.insertAdjacentHTML('beforeend', turnHtml);
 		}
 
 		function formatMarkdown(text) {
+			if (!text) return '';
 			return text
 				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 				.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
 				.replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold mt-5 mb-2 text-white">$1</h2>')
-				.replace(/\n\n/g, '</p><p>')
+				.replace(/\n\n/g, '</p><p class="mt-2">')
 				.replace(/\n- /g, '<br>• ')
 				.replace(/\n\* /g, '<br>• ');
 		}
 
-		async function fetchLLM(systemPrompt, userPrompt) {
+		async function fetchLLM(systemPrompt, userPrompt, contextHistory = "") {
 			const apiKey = state.apiKeys[state.provider];
 			if (!apiKey) throw new Error(`API Key for ${state.provider} is missing.`);
+			
+			let finalPrompt = userPrompt;
+			if (contextHistory) {
+				finalPrompt = `--- CONVERSATION HISTORY ---\n${contextHistory}\n\n--- CURRENT PROMPT ---\n${userPrompt}`;
+			}
 			
 			if (state.provider === 'openai' || state.provider === 'deepseek') {
 				const endpoint = state.provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
 				const res = await fetch(endpoint, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-					body: JSON.stringify({ model: state.model, messages: [ { role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt } ] })
+					body: JSON.stringify({ model: state.model, messages: [ { role: 'system', content: systemPrompt }, { role: 'user', content: finalPrompt } ] })
 				});
 				if(!res.ok) throw new Error(await res.text());
 				const data = await res.json(); return data.choices[0].message.content;
@@ -491,7 +477,7 @@ Format:
 				const res = await fetch('https://api.anthropic.com/v1/messages', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-					body: JSON.stringify({ model: state.model, max_tokens: 4096, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+					body: JSON.stringify({ model: state.model, max_tokens: 4096, system: systemPrompt, messages: [{ role: 'user', content: finalPrompt }] })
 				});
 				if(!res.ok) throw new Error(await res.text());
 				const data = await res.json(); return data.content[0].text;
@@ -501,7 +487,7 @@ Format:
 				const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${apiKey}`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: 'user', parts: [{ text: userPrompt }] }] })
+					body: JSON.stringify({ systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: 'user', parts: [{ text: finalPrompt }] }] })
 				});
 				if(!res.ok) throw new Error(await res.text());
 				const data = await res.json(); return data.candidates[0].content.parts[0].text;
@@ -519,60 +505,69 @@ Format:
 			els.settingsPanel.classList.add('hidden');
 			els.historyPanel.classList.add('hidden');
 			
-			els.debateGrid.innerHTML = '';
-			window.rawOutputs = {};
-			els.executiveContainer.classList.remove('hidden');
-			els.executiveIndicator.classList.remove('hidden');
-			els.executiveIndicator.classList.add('animate-pulse-fast');
+			// Handle Context & Session
+			let contextHistory = "";
+			let session = state.history.find(s => s.id === state.currentSessionId);
+			if (session) {
+				session.turns.forEach(t => {
+					contextHistory += `User: ${t.userPrompt}\nCouncil Summary: ${t.executive}\n\n`;
+				});
+			} else {
+				session = { id: Date.now(), title: promptText.substring(0, 40) + "...", turns: [] };
+				state.history.push(session);
+				state.currentSessionId = session.id;
+			}
 			
-			els.auditLogContainer.classList.remove('hidden');
-			els.auditLogContainer.removeAttribute('open');
-			els.contentSynthesis.innerHTML = '<span class="italic text-slate-500">Awaiting council transcripts...</span>';
+			const currentTurn = { userPrompt: promptText, provider: state.provider, model: state.model, council: [], synthesis: "", executive: "" };
 			
-			const historyItem = { timestamp: Date.now(), prompt: promptText, provider: state.provider, model: state.model, council: [], synthesis: "", executive: "" };
+			els.chatLog.classList.remove('hidden');
+			els.userPrompt.value = '';
+
+			// Render User Prompt
+			els.chatLog.insertAdjacentHTML('beforeend', `
+				<div class="flex justify-end">
+					<div class="bg-blue-600 text-white p-4 rounded-xl max-w-3xl shadow-sm text-sm">
+						${formatMarkdown(promptText)}
+					</div>
+				</div>
+			`);
+
+			// Render Loading Block
+			const loadingId = 'loading-' + Date.now();
+			els.chatLog.insertAdjacentHTML('beforeend', `
+				<div id="${loadingId}" class="flex justify-start">
+					<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 w-full">
+						<span class="italic text-slate-400 animate-pulse" id="status-${loadingId}">Phase 0: Director is casting experts...</span>
+					</div>
+				</div>
+			`);
+			
+			window.scrollTo(0, document.body.scrollHeight);
+			const statusEl = document.getElementById(`status-${loadingId}`);
 			
 			// Phase 0: Casting Director
-			els.submitBtn.innerText = 'Phase 0: Director is casting experts...';
-			els.executiveOutput.innerHTML = '<span class="italic text-purple-400">Phase 0: Casting Director is determining required expertise...</span>';
-			
 			let dynamicMembers = [];
 			try {
-				const rawDirectorOutput = await fetchLLM(state.directorPrompt, promptText);
-				// Robust JSON parsing to handle markdown blocks (```json ... ```)
+				const rawDirectorOutput = await fetchLLM(state.directorPrompt, promptText, contextHistory);
 				const jsonMatch = rawDirectorOutput.match(/\[[\s\S]*\]/);
 				if (!jsonMatch) throw new Error("Director did not return a valid JSON array.");
 				dynamicMembers = JSON.parse(jsonMatch[0]);
 			} catch (err) {
-				els.executiveOutput.innerHTML = `<span class="text-red-400">Casting Failed: ${err.message}. Retrying with default council...</span>`;
-				dynamicMembers = defaultMembers; // Fallback
+				statusEl.innerText = `Casting Failed: ${err.message}. Retrying...`;
+				state.isRunning = false; els.submitBtn.disabled = false; return;
 			}
 
 			// Phase 1: Fan-out
-			els.submitBtn.innerText = 'Phase 1: Experts are deliberating...';
-			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 1: Dynamic Council is deliberating...</span>';
+			statusEl.innerText = 'Phase 1: Experts are deliberating...';
 			
 			let transcriptBuilder = "";
 			const tasks = dynamicMembers.map(async (member, idx) => {
-				const box = createMemberBox(idx, member.name, member.prompt);
-				els.debateGrid.appendChild(box);
-				const contentDiv = document.getElementById(`content-${idx}`);
-				const indicatorDiv = document.getElementById(`indicator-${idx}`);
-				
 				try {
-					const response = await fetchLLM(member.prompt, promptText);
-					window.rawOutputs[`member-${idx}`] = response;
-					historyItem.council.push({ id: idx, name: member.name, prompt: member.prompt, raw: response });
-					
-					contentDiv.innerHTML = `<p>${formatMarkdown(response)}</p>`;
-					contentDiv.classList.remove('italic', 'text-slate-500');
-					contentDiv.classList.add('text-slate-400');
-					indicatorDiv.classList.replace('bg-purple-500', 'bg-emerald-500');
-					indicatorDiv.classList.remove('animate-pulse-fast');
+					const response = await fetchLLM(member.prompt, promptText, contextHistory);
+					currentTurn.council.push({ id: idx, name: member.name, prompt: member.prompt, raw: response });
 					return `--- ${member.name.toUpperCase()} ---\nSYSTEM INSTRUCTIONS: ${member.prompt}\n\n${response}\n\n`;
 				} catch (err) {
-					contentDiv.innerHTML = `<span class="text-red-400">Error: ${err.message}</span>`;
-					indicatorDiv.classList.replace('bg-purple-500', 'bg-red-500');
-					indicatorDiv.classList.remove('animate-pulse-fast');
+					currentTurn.council.push({ id: idx, name: member.name, prompt: member.prompt, raw: `Error: ${err.message}` });
 					return `--- ${member.name.toUpperCase()} ---\nError: ${err.message}\n\n`;
 				}
 			});
@@ -581,44 +576,66 @@ Format:
 			transcriptBuilder = results.join("");
 			
 			// Phase 2: Synthesis
-			els.submitBtn.innerText = 'Phase 2: Compiling Audit...';
-			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 2: Moderator is compiling the audit and synthesis...</span>';
-			els.contentSynthesis.innerHTML = '<span class="italic text-slate-400 animate-pulse">Synthesizing...</span>';
-			
-			let synthesisFinal = "";
+			statusEl.innerText = 'Phase 2: Moderator compiling audit...';
 			try {
-				const synthPrompt = `User's Original Premise: ${promptText}\n\n--- COUNCIL DEBATE TRANSCRIPT ---\n\n${transcriptBuilder}`;
-				synthesisFinal = await fetchLLM(state.overseerPrompt, synthPrompt);
-				window.rawOutputs['synthesisRaw'] = synthesisFinal;
-				historyItem.synthesis = synthesisFinal;
-				els.contentSynthesis.innerHTML = `<p>${formatMarkdown(synthesisFinal)}</p>`;
-				els.contentSynthesis.classList.remove('italic', 'text-slate-500');
-				els.contentSynthesis.classList.add('text-slate-300');
+				const synthPrompt = `User's Latest Prompt: ${promptText}\n\n--- CURRENT COUNCIL DEBATE TRANSCRIPT ---\n\n${transcriptBuilder}`;
+				currentTurn.synthesis = await fetchLLM(state.overseerPrompt, synthPrompt, contextHistory);
 			} catch (err) {
-				els.contentSynthesis.innerHTML = `<span class="text-red-400">Synthesis Failed: ${err.message}</span>`;
-				synthesisFinal = "Synthesis failed due to an error.";
+				currentTurn.synthesis = "Synthesis failed due to an error: " + err.message;
 			}
 
 			// Phase 3: Executive Summary
-			els.submitBtn.innerText = 'Phase 3: Translating Summary...';
-			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 3: Translating synthesis into executive summary...</span>';
-			
+			statusEl.innerText = 'Phase 3: Translating summary...';
 			try {
-				const execPrompt = `Moderator Synthesis:\n\n${synthesisFinal}`;
-				const executiveFinal = await fetchLLM(state.communicatorPrompt, execPrompt);
-				window.rawOutputs['executiveRaw'] = executiveFinal;
-				historyItem.executive = executiveFinal;
-				window.currentDebateData = historyItem; 
-				els.executiveOutput.innerHTML = `<p>${formatMarkdown(executiveFinal)}</p>`;
-				
-				state.history.push(historyItem);
-				saveState();
-				renderHistory();
+				const execPrompt = `Moderator Synthesis:\n\n${currentTurn.synthesis}`;
+				currentTurn.executive = await fetchLLM(state.communicatorPrompt, execPrompt, contextHistory);
 			} catch (err) {
-				els.executiveOutput.innerHTML = `<span class="text-red-400">Executive Summary Failed: ${err.message}</span>`;
+				currentTurn.executive = "Summary Failed: " + err.message;
 			}
 			
-			els.executiveIndicator.classList.remove('animate-pulse-fast');
+			// Save & Render Completion
+			session.turns.push(currentTurn);
+			saveState();
+			renderHistory();
+			
+			// Replace loading block with actual turn UI
+			document.getElementById(loadingId).outerHTML = `
+				<div class="flex justify-start">
+					<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-emerald-900/50 w-full relative">
+						<div class="flex justify-between items-start mb-4">
+							<h2 class="text-xl font-bold text-emerald-400 tracking-tight">Council Verdict</h2>
+						</div>
+						<div class="markdown-content text-slate-200 text-base leading-relaxed">${formatMarkdown(currentTurn.executive)}</div>
+						
+						<details class="mt-6 group border-t border-slate-700 pt-4">
+							<summary class="text-sm font-bold text-slate-400 cursor-pointer flex items-center gap-2 hover:text-slate-200 transition-colors">
+								<span class="group-open:rotate-90 transition-transform">▶</span> View Audit & Transcripts
+							</summary>
+							
+							<div class="mt-6 space-y-6">
+								<div class="bg-slate-900 p-5 rounded-xl border border-blue-900/30">
+									<h3 class="font-bold text-blue-400 mb-3 text-sm">Moderator Synthesis (Phase 2)</h3>
+									<div class="markdown-content text-sm text-slate-400 leading-relaxed">${formatMarkdown(currentTurn.synthesis)}</div>
+								</div>
+				
+								<div>
+									<h3 class="font-bold text-slate-300 mb-3 text-sm">Dynamic Council (Phase 1)</h3>
+									<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+										${currentTurn.council.map(c => `
+											<div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+												<h4 class="font-bold text-purple-400 text-sm mb-2">${c.name}</h4>
+												<div class="markdown-content text-xs text-slate-400 leading-relaxed">${formatMarkdown(c.raw)}</div>
+											</div>
+										`).join('')}
+									</div>
+								</div>
+							</div>
+						</details>
+					</div>
+				</div>
+			`;
+			
+			window.scrollTo(0, document.body.scrollHeight);
 			state.isRunning = false;
 			els.submitBtn.disabled = false;
 			els.submitBtn.innerText = 'Convene Council';
