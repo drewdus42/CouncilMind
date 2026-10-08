@@ -2,905 +2,796 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<meta name="referrer" content="no-referrer">
 	<title>AI Council Orchestrator</title>
 	<script src="https://cdn.tailwindcss.com"></script>
+	<!-- KaTeX for Math & Science Formula Rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+	<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 	<style>
-		@keyframes pulse-fast{0%,100%{opacity:1}50%{opacity:.35}}
-		.animate-pulse-fast{animation:pulse-fast 1.2s cubic-bezier(.4,0,.6,1) infinite}
-		.markdown-content p{margin:0 0 .75em}.markdown-content ul{list-style:disc;margin:0 0 .75em 1.5em}.markdown-content ol{list-style:decimal;margin:0 0 .75em 1.5em}.markdown-content li{margin:.2em 0}.markdown-content h2{font-weight:700;font-size:1.1rem;margin:1.1em 0 .5em;color:#f8fafc}.markdown-content h3{font-weight:700;margin:1em 0 .5em;color:#e2e8f0}.markdown-content strong{color:#f8fafc}.markdown-content code{background:#0f172a;padding:.1rem .3rem;border-radius:.25rem}.markdown-content pre{background:#020617;padding:.8rem;border-radius:.5rem;overflow:auto;margin:.75rem 0}
-		::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#475569}
-		details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}
-		.status-dot{width:.55rem;height:.55rem;border-radius:999px;display:inline-block}.status-ok{background:#34d399}.status-warn{background:#fbbf24}.status-bad{background:#f87171}.status-idle{background:#64748b}
+		.markdown-content p{margin-bottom:.75em}
+		.markdown-content ul{list-style:disc;margin:0 0 .75em 1.5em}
+		.markdown-content ol{list-style:decimal;margin:0 0 .75em 1.5em}
+		.markdown-content li{margin:.2em 0}
+		.markdown-content h3{font-weight:bold;margin:1em 0 .5em;color:#e2e8f0}
+		.markdown-content h2{font-weight:bold;margin:1.2em 0 .5em;color:#f8fafc}
+		.markdown-content strong{color:#f8fafc}
+		.markdown-content code{background:#0f172a;padding:.1rem .3rem;border-radius:.25rem}
+		.markdown-content pre{background:#020617;padding:.8rem;border-radius:.5rem;overflow:auto;margin:.75rem 0}
+		::-webkit-scrollbar{width:8px}
+		::-webkit-scrollbar-track{background:#0f172a}
+		::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+		.markdown-content>*:last-child{margin-bottom:0}
+		@media(max-width:767px){select,input,textarea{font-size:16px}}
+		details>summary{list-style:none}
+		details>summary::-webkit-details-marker{display:none}
+		.katex-display{overflow-x:auto;overflow-y:hidden;padding:.5rem 0;margin:.5rem 0}
+		.katex{font-size:1.05em;color:#93c5fd}
 	</style>
 </head>
-<body class="bg-slate-950 text-slate-300 font-sans min-h-screen pb-8">
-<div class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-	<header class="bg-slate-900 p-5 rounded-xl shadow-lg border border-slate-800 mb-6">
-		<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-			<div>
-				<h1 class="text-2xl font-bold text-slate-100 tracking-tight">AI Council Orchestrator</h1>
-				<p class="text-sm text-slate-400">Single-provider, dynamic expert council with auditability and controlled context</p>
-			</div>
-			<div class="flex flex-wrap gap-2">
-				<button id="newDebateBtn" class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg text-sm font-semibold">➕ New Debate</button>
-				<button id="exportBtn" class="px-4 py-2 bg-slate-800 text-emerald-400 hover:bg-slate-700 rounded-lg text-sm font-semibold">💾 Export</button>
-				<button id="exportJsonBtn" class="px-4 py-2 bg-slate-800 text-cyan-400 hover:bg-slate-700 rounded-lg text-sm font-semibold">JSON</button>
-				<button id="historyBtn" class="px-4 py-2 bg-slate-800 text-slate-200 hover:bg-slate-700 rounded-lg text-sm font-semibold">📚 History</button>
-				<button id="settingsBtn" class="px-4 py-2 bg-slate-800 text-slate-200 hover:bg-slate-700 rounded-lg text-sm font-semibold">⚙️ Settings</button>
-			</div>
+<body class="bg-slate-950 text-slate-300 font-sans">
+<div class="h-[100dvh] flex flex-col">
+
+	<!-- Header -->
+	<header class="shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-800 bg-slate-950" style="padding-top:max(.5rem,env(safe-area-inset-top))">
+		<div class="flex items-center gap-2 min-w-0">
+			<span class="text-xl">⚖️</span>
+			<h1 class="font-semibold text-slate-100 truncate">AI Council</h1>
 		</div>
-		<div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
-			<span>Provider: <b id="providerBadge" class="text-slate-300">OpenAI</b></span>
-			<span>Model: <b id="modelBadge" class="text-slate-300">—</b></span>
-			<span id="runState"><span class="status-dot status-idle"></span> Ready</span>
-			<span id="memoryBadge">Compact session memory</span>
+		<div class="flex items-center">
+			<button onclick="startNewDebate()" aria-label="New debate" title="New debate" class="w-10 h-10 rounded-lg hover:bg-slate-800 text-lg transition-colors">➕</button>
+			<button onclick="exportCurrentDebate()" aria-label="Export all" title="Export session (.md)" class="w-10 h-10 rounded-lg hover:bg-slate-800 text-lg transition-colors">💾</button>
+			<button id="toggleHistoryBtn" aria-label="History" title="History" class="w-10 h-10 rounded-lg hover:bg-slate-800 text-lg transition-colors">📚</button>
+			<button id="toggleSettingsBtn" aria-label="Settings" title="Settings" class="w-10 h-10 rounded-lg hover:bg-slate-800 text-lg transition-colors">⚙️</button>
 		</div>
 	</header>
 
-	<section id="historyPanel" class="hidden bg-slate-900 p-6 rounded-xl border border-slate-800 mb-6">
-		<div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-4">
-			<h2 class="text-xl font-bold text-slate-100">Debate History</h2>
-			<button id="clearHistoryBtn" class="text-red-400 hover:text-red-300 text-sm font-semibold">Clear All</button>
-		</div>
-		<div id="historyList" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
-	</section>
-
-	<section id="settingsPanel" class="hidden bg-slate-900 p-6 rounded-xl border border-slate-800 mb-6 space-y-6">
-		<div class="flex justify-between gap-4 items-start">
-			<div>
-				<h2 class="text-xl font-bold text-slate-100">Configuration</h2>
-				<p class="text-xs text-slate-500 mt-1">API keys remain locally scoped. Configure proxies for environments with strict CORS policies.</p>
+	<!-- Main Chat Area -->
+	<div id="scrollArea" class="flex-1 overflow-y-auto overscroll-contain">
+		<div class="max-w-3xl mx-auto px-4 py-6">
+			<div id="emptyState" class="text-center pt-[18vh] px-4">
+				<div class="text-5xl mb-4">⚖️</div>
+				<h2 class="text-2xl font-semibold text-slate-100 mb-2">What should the council weigh?</h2>
+				<p class="text-sm text-slate-500 max-w-sm mx-auto">Pose a question, dilemma, or hypothesis. An autonomous panel of experts—including a dedicated Red Team—will debate it before a moderator synthesizes the verdict.</p>
 			</div>
-			<button id="clearKeysBtn" class="text-xs text-red-400 hover:text-red-300">Clear Keys</button>
+			<div id="chatLog" class="flex flex-col gap-6"></div>
 		</div>
+	</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">OpenAI API Key</label><input type="password" id="keyOpenai" autocomplete="off" placeholder="sk-..." class="key-input"></div>
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">Anthropic API Key</label><input type="password" id="keyAnthropic" autocomplete="off" placeholder="sk-ant-..." class="key-input"></div>
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">Google Gemini API Key</label><input type="password" id="keyGemini" autocomplete="off" placeholder="AIza..." class="key-input"></div>
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">DeepSeek API Key</label><input type="password" id="keyDeepseek" autocomplete="off" placeholder="sk-..." class="key-input"></div>
-		</div>
-
-		<div class="border-t border-slate-800 pt-5">
-			<label class="block text-sm font-semibold mb-1 text-slate-400">CORS Proxy / Relay (Required for DeepSeek on GitHub Pages)</label>
-			<input type="text" id="corsProxy" placeholder="https://corsproxy.io/?" class="key-input">
-			<p class="text-xs text-slate-500 mt-1">Leave empty to use direct endpoints. When hosting on web origins, prepends this prefix to avoid browser CORS blocks on providers without open origin headers.</p>
-		</div>
-
-		<div class="flex flex-wrap gap-5 items-center text-sm">
-			<label class="flex items-center gap-2"><input id="rememberKeys" type="checkbox" class="accent-blue-600"><span>Remember API keys on this device</span></label>
-			<label class="flex items-center gap-2"><input id="autoRetry" type="checkbox" class="accent-blue-600" checked><span>Retry transient failures</span></label>
-			<label class="flex items-center gap-2"><input id="saveHistory" type="checkbox" class="accent-blue-600" checked><span>Save debate history locally</span></label>
-		</div>
-
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-800 pt-5">
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">Request timeout (seconds)</label><input id="timeoutSeconds" type="number" min="15" max="300" step="5" class="config-input"></div>
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">Expert count</label><input id="expertCount" type="number" min="2" max="4" step="1" class="config-input"></div>
-			<div><label class="block text-sm font-semibold mb-1 text-slate-400">Max context characters</label><input id="maxContextChars" type="number" min="2000" max="50000" step="1000" class="config-input"></div>
-		</div>
-
-		<div class="border-t border-slate-800 pt-5 space-y-4">
-			<div><label class="block text-lg font-bold mb-2 text-slate-100">Phase 0 — Casting Director</label><textarea id="directorPrompt" rows="8" class="prompt-input"></textarea></div>
-			<div><label class="block text-lg font-bold mb-2 text-slate-100">Phase 2 — Moderator / Auditor</label><textarea id="overseerPrompt" rows="8" class="prompt-input"></textarea></div>
-			<div><label class="block text-lg font-bold mb-2 text-slate-100">Phase 3 — Executive Communicator</label><textarea id="communicatorPrompt" rows="7" class="prompt-input"></textarea></div>
-		</div>
-	</section>
-
-	<main id="chatLog" class="flex flex-col gap-6 mb-6"></main>
-
-	<section class="bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-800 sticky bottom-4 z-10">
-		<div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-4 gap-4">
-			<label class="text-lg font-bold text-slate-100">Speak to the Council</label>
-			<div class="flex flex-wrap gap-2 w-full xl:w-auto">
-				<select id="activeProvider" class="select-input">
+	<!-- Input Bar -->
+	<div class="shrink-0 px-3 pt-2 bg-slate-950" style="padding-bottom:max(.75rem,env(safe-area-inset-bottom))">
+		<div class="max-w-3xl mx-auto rounded-3xl border border-slate-700 bg-slate-900 p-2 focus-within:border-slate-500 shadow-lg">
+			<textarea id="userPrompt" rows="1" placeholder="Message the council..." class="w-full resize-none bg-transparent px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none max-h-48"></textarea>
+			<div class="flex items-center gap-2 pt-1">
+				<select id="activeProvider" class="min-w-0 max-w-[38%] rounded-full bg-slate-800 border-0 text-slate-300 text-xs py-1.5 px-2.5 focus:outline-none">
 					<option value="openai">OpenAI</option>
 					<option value="anthropic">Anthropic</option>
-					<option value="gemini">Google Gemini</option>
+					<option value="gemini">Gemini</option>
 					<option value="deepseek">DeepSeek</option>
 				</select>
-				<select id="activeModelSelect" class="select-input min-w-52"></select>
-				<input id="activeModelInput" class="select-input hidden min-w-52" placeholder="Type model ID..." autocomplete="off">
+				<select id="activeModelSelect" class="min-w-0 flex-1 rounded-full bg-slate-800 border-0 text-slate-300 text-xs py-1.5 px-2.5 focus:outline-none"></select>
+				<input type="text" id="activeModelInput" class="hidden min-w-0 flex-1 rounded-full bg-slate-800 text-slate-200 text-xs py-1.5 px-3 focus:outline-none" placeholder="Model ID">
+				<button id="submitBtn" aria-label="Send" class="shrink-0 w-9 h-9 rounded-full bg-slate-100 text-slate-900 font-bold disabled:opacity-40 flex items-center justify-center hover:bg-white transition-opacity">↑</button>
 			</div>
 		</div>
-		<textarea id="userPrompt" rows="4" placeholder="State your premise, dilemma, question, design problem, or follow-up argument..." class="w-full p-4 border border-slate-700 rounded-lg bg-slate-950 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-600"></textarea>
-		<div class="flex flex-col md:flex-row gap-3 mt-4">
-			<button id="submitBtn" class="flex-1 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 disabled:opacity-50 text-lg">Convene Council</button>
-			<button id="stopBtn" class="hidden px-6 py-4 bg-red-900/50 text-red-300 border border-red-800 rounded-lg font-bold hover:bg-red-900">Stop Run</button>
-		</div>
-		<p class="text-xs text-slate-600 mt-3">Ctrl/Cmd + Enter to convene. Executes Phase 0, parallel experts, Phase 2, and Phase 3 sequentially.</p>
-	</section>
+	</div>
 </div>
 
-<style>
-	.key-input,.config-input,.prompt-input,.select-input{width:100%;padding:.65rem .75rem;border:1px solid #334155;border-radius:.5rem;background:#020617;color:#e2e8f0;outline:none}
-	.key-input:focus,.config-input:focus,.prompt-input:focus,.select-input:focus{box-shadow:0 0 0 2px #2563eb}
-	.select-input{width:auto}
-</style>
+<!-- Slide-Out Backdrop -->
+<div id="backdrop" class="hidden fixed inset-0 z-30 bg-black/60 transition-opacity"></div>
+
+<!-- History Drawer -->
+<aside id="historyPanel" class="hidden fixed z-40 inset-0 md:inset-y-0 md:left-auto md:right-0 md:w-[28rem] bg-slate-900 md:border-l border-slate-700 overflow-y-auto">
+	<div class="sticky top-0 bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between" style="padding-top:max(.75rem,env(safe-area-inset-top))">
+		<h2 class="text-lg font-semibold text-slate-100">History</h2>
+		<div class="flex items-center gap-3">
+			<button id="clearHistoryBtn" class="text-red-400 text-sm font-semibold hover:text-red-300">Clear all</button>
+			<button onclick="showPanel(null)" aria-label="Close" class="w-9 h-9 rounded-lg hover:bg-slate-800 text-xl transition-colors">✕</button>
+		</div>
+	</div>
+	<div id="historyList" class="p-4 space-y-3"></div>
+</aside>
+
+<!-- Settings Drawer -->
+<aside id="settingsPanel" class="hidden fixed z-40 inset-0 md:inset-y-0 md:left-auto md:right-0 md:w-[28rem] bg-slate-900 md:border-l border-slate-700 overflow-y-auto">
+	<div class="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between" style="padding-top:max(.75rem,env(safe-area-inset-top))">
+		<h2 class="text-lg font-semibold text-slate-100">Settings</h2>
+		<button onclick="showPanel(null)" aria-label="Close" class="w-9 h-9 rounded-lg hover:bg-slate-800 text-xl transition-colors">✕</button>
+	</div>
+	<div class="p-4 space-y-5" style="padding-bottom:max(2rem,env(safe-area-inset-bottom))">
+		<p class="text-xs text-slate-500">API keys are stored exclusively in this browser's local storage and sent directly to provider endpoints.</p>
+		
+		<div>
+			<label class="block text-sm font-semibold mb-1 text-slate-400">OpenAI API Key</label>
+			<input type="password" id="keyOpenai" placeholder="sk-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		</div>
+		<div>
+			<label class="block text-sm font-semibold mb-1 text-slate-400">Anthropic API Key</label>
+			<input type="password" id="keyAnthropic" placeholder="sk-ant-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		</div>
+		<div>
+			<label class="block text-sm font-semibold mb-1 text-slate-400">Google Gemini API Key</label>
+			<input type="password" id="keyGemini" placeholder="AIza..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		</div>
+		<div>
+			<label class="block text-sm font-semibold mb-1 text-slate-400">DeepSeek API Key</label>
+			<input type="password" id="keyDeepseek" placeholder="sk-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+		</div>
+
+		<div class="border-t border-slate-800 pt-4">
+			<label class="block text-sm font-semibold mb-1 text-slate-400">CORS Proxy (Required for DeepSeek on GitHub Pages)</label>
+			<input type="text" id="corsProxyInput" placeholder="https://corsproxy.io/?" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+			<p class="text-[11px] text-slate-500 mt-1">DeepSeek blocks browser cross-origin requests. Requests from hosted pages are routed through this proxy prefix. Leave empty if calling directly.</p>
+		</div>
+
+		<!-- Length & Brevity Controls -->
+		<div class="border-t border-slate-800 pt-4 space-y-4">
+			<h3 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Output Depth & Brevity</h3>
+			
+			<div>
+				<label class="block text-xs font-semibold mb-1 text-slate-400">Council Member Response Limit</label>
+				<select id="expertBrevitySelect" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<option value="succinct">Succinct (1-2 short paragraphs, tight bounds)</option>
+					<option value="medium">Medium (2-3 focused paragraphs, moderate detail)</option>
+					<option value="verbose">Verbose (Comprehensive in-depth breakdown)</option>
+				</select>
+			</div>
+
+			<div>
+				<label class="block text-xs font-semibold mb-1 text-slate-400">Final Executive Summary Brevity</label>
+				<select id="executiveBrevitySelect" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+					<option value="succinct">Succinct (Verdict + 2-3 short bullet points max)</option>
+					<option value="medium">Medium (Structured verdict + key trade-offs & nuances)</option>
+					<option value="verbose">Verbose (Comprehensive briefing, all risk angles)</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="border-t border-slate-800 pt-5 space-y-5">
+			<div>
+				<label class="block text-sm font-semibold mb-1 text-slate-300">Phase 0: Casting Director</label>
+				<textarea id="directorPrompt" rows="8" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+			</div>
+			<div>
+				<label class="block text-sm font-semibold mb-1 text-slate-300">Phase 2: Moderator / Auditor</label>
+				<textarea id="overseerPrompt" rows="4" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+			</div>
+			<div>
+				<label class="block text-sm font-semibold mb-1 text-slate-300">Phase 3: Executive Communicator</label>
+				<textarea id="communicatorPrompt" rows="4" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-950 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+			</div>
+		</div>
+	</div>
+</aside>
 
 <script>
-'use strict';
+	const providerModels = {
+		openai: ['gpt-6.1-sol', 'gpt-6-luna', 'gpt-5.6-terra', 'gpt-4o', 'gpt-4o-mini'],
+		anthropic: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-haiku-5-5', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
+		gemini: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.8-flash', 'gemini-3.1-pro', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+		deepseek: ['deepseek-chat', 'deepseek-reasoner', 'deepseek-flash', 'deepseek-v4-pro']
+	};
 
-const STORAGE_KEY = 'ai_council_data_v8';
-const LEGACY_KEYS = ['ai_council_data_v7','ai_council_data_v6','ai_council_data_v5'];
-const MAX_EXPERTS = 4;
-const MIN_EXPERTS = 2;
-const MAX_HISTORY_SESSIONS = 20;
-const PHASE_LIMITS = { director: 900, expert: 1200, moderator: 1800, executive: 700 };
+	const expertBrevityGuidelines = {
+		succinct: "CRITICAL BREVITY REQUIREMENT: Enforce strict brevity. You must explicitly instruct every expert in their prompt to limit their response to 1-2 short paragraphs maximum.",
+		medium: "BREVITY REQUIREMENT: Instruct every expert in their prompt to provide a focused response of 2-3 structured paragraphs maximum.",
+		verbose: "DEPTH REQUIREMENT: Instruct every expert in their prompt to provide a thorough, comprehensive analysis with detailed reasoning and technical precision."
+	};
 
-const providerModels = {
-	openai: ['gpt-6-luna','gpt-6.1-sol','gpt-5.6-terra','gpt-4o','gpt-4o-mini'],
-	anthropic: ['claude-sonnet-5-5','claude-opus-5-5','claude-fable-5-1','claude-haiku-4-5-20251001'],
-	gemini: ['gemini-3.8-flash','gemini-3.8-flash-lite','gemini-3.8-live','gemini-3.1-pro'],
-	deepseek: ['deepseek-flash','deepseek-chat']
-};
+	const executiveBrevityGuidelines = {
+		succinct: "Give a fast, highly succinct summary. Bottom-line verdict first, followed by 2-3 short bullet points max. Be fast and brief.",
+		medium: "Give a balanced executive briefing. State the bottom-line verdict, followed by 3-5 structured bullet points detailing primary arguments, trade-offs, and critical risks.",
+		verbose: "Provide a comprehensive, in-depth executive report. Deliver the bottom-line verdict, an analysis of points of friction, unresolvable paradoxes, systemic risks, and strategic recommendations."
+	};
 
-const defaultDirectorPrompt = `You are the Council Casting Director. Your job is to design a small, independent expert panel for the user's CURRENT question.
+	const defaultDirectorPrompt = `You are the Council Casting Director. Read the user's premise and the conversation history. Determine the 2 to 4 most critical, specialized expert personas needed to analyze it. One persona MUST ALWAYS be a ruthless 'Red Teamer' (its name must contain "Red Team").
 
-Rules:
-1. Select exactly {{EXPERT_COUNT}} specialized roles. Each role must contribute a genuinely different analytical lens.
-2. One role MUST be a ruthless Red Teamer. Its job is to attack assumptions, identify failure modes, and say what would falsify the emerging answer.
-3. Do not create generic roles such as "Helpful Assistant" or "General Expert".
-4. Every expert must be concise and evidence-sensitive. They must distinguish facts from assumptions and flag uncertainty.
-5. Experts must answer the user's actual question, not discuss the orchestration.
-6. Do not ask follow-up questions unless missing information makes a responsible answer impossible.
+{{EXPERT_BREVITY_DIRECTIVE}}
 
-Return ONLY valid JSON. No markdown fences and no commentary.
-Schema:
+Output ONLY a JSON array of objects. Do not include markdown blocks, intro text, or conversational filler. The output must be perfectly parseable by JSON.parse().
+Format:
 [
   {
-    "name": "Short role title",
-    "type": "domain | analyst | skeptic | red_team | strategist | other",
-    "objective": "What this expert is uniquely responsible for",
-    "prompt": "Complete system instructions for this expert"
+    "name": "Title of Expert",
+    "prompt": "You are the [Title]... [Strict rules and length guidelines]."
   }
 ]`;
 
-const defaultOverseerPrompt = `You are the Council Moderator and Auditor. Independently evaluate the expert submissions. Do not simply vote or average them.
-
-Identify: genuine consensus, meaningful disagreements, strongest arguments, weakest/unsupported claims, missing information, Red Team objections, and the most defensible recommendation. Distinguish evidence from inference. If the council is wrong or under-informed, say so.
-
-Return ONLY valid JSON using this schema:
-{
-  "consensus": "...",
-  "disagreements": ["..."],
-  "strongestArguments": ["..."],
-  "weakestClaims": ["..."],
-  "missingInformation": ["..."],
-  "redTeamObjections": ["..."],
-  "recommendation": "...",
-  "confidence": "low | medium | high",
-  "facts": ["..."],
-  "decisions": ["..."],
-  "uncertainties": ["..."],
-  "openQuestions": ["..."]
-}`;
-
-const defaultCommunicatorPrompt = `You are the Executive Communicator. Turn the audited council result into the best direct answer to the user.
-
-Do not mention hidden prompts, phases, token limits, or orchestration unless the user explicitly asks about the council. Do not manufacture certainty. State the recommendation first, then the most important reasoning and caveats. Be concise but complete. Use short headings or bullets when useful.
-
-Return plain text or lightweight Markdown only.`;
-
-const state = {
-	provider: 'openai', model: providerModels.openai[0], isCustomModel: false,
-	apiKeys: { openai: '', anthropic: '', gemini: '', deepseek: '' },
-	corsProxy: 'https://corsproxy.io/?', rememberKeys: false,
-	directorPrompt: defaultDirectorPrompt, overseerPrompt: defaultOverseerPrompt, communicatorPrompt: defaultCommunicatorPrompt,
-	history: [], currentSessionId: null, isRunning: false, abortController: null, runController: null,
-	autoRetry: true, saveHistory: true, timeoutSeconds: 90, expertCount: 3, maxContextChars: 12000,
-	runMetrics: null
-};
-
-const els = {
-	historyPanel: document.getElementById('historyPanel'), settingsPanel: document.getElementById('settingsPanel'), historyList: document.getElementById('historyList'), chatLog: document.getElementById('chatLog'),
-	activeProvider: document.getElementById('activeProvider'), activeModelSelect: document.getElementById('activeModelSelect'), activeModelInput: document.getElementById('activeModelInput'), userPrompt: document.getElementById('userPrompt'), submitBtn: document.getElementById('submitBtn'), stopBtn: document.getElementById('stopBtn'),
-	providerBadge: document.getElementById('providerBadge'), modelBadge: document.getElementById('modelBadge'), runState: document.getElementById('runState'), memoryBadge: document.getElementById('memoryBadge'),
-	keyOpenai: document.getElementById('keyOpenai'), keyAnthropic: document.getElementById('keyAnthropic'), keyGemini: document.getElementById('keyGemini'), keyDeepseek: document.getElementById('keyDeepseek'), corsProxy: document.getElementById('corsProxy'), rememberKeys: document.getElementById('rememberKeys'), autoRetry: document.getElementById('autoRetry'), saveHistory: document.getElementById('saveHistory'), timeoutSeconds: document.getElementById('timeoutSeconds'), expertCount: document.getElementById('expertCount'), maxContextChars: document.getElementById('maxContextChars'), directorPrompt: document.getElementById('directorPrompt'), overseerPrompt: document.getElementById('overseerPrompt'), communicatorPrompt: document.getElementById('communicatorPrompt')
-};
-
-function providerName(p) { return ({ openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Google Gemini', deepseek: 'DeepSeek' })[p] || p; }
-function uid(prefix = 'id') { return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
-function clamp(n, min, max) { return Math.min(max, Math.max(min, n)); }
-function nowIso() { return new Date().toISOString(); }
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function saveState() {
-	const payload = {
-		provider: state.provider, model: state.model, isCustomModel: state.isCustomModel, rememberKeys: state.rememberKeys, corsProxy: state.corsProxy,
-		directorPrompt: state.directorPrompt, overseerPrompt: state.overseerPrompt, communicatorPrompt: state.communicatorPrompt,
-		history: state.saveHistory ? state.history.slice(-MAX_HISTORY_SESSIONS) : [], autoRetry: state.autoRetry, saveHistory: state.saveHistory,
-		timeoutSeconds: state.timeoutSeconds, expertCount: state.expertCount, maxContextChars: state.maxContextChars
+	const RED_TEAM_FALLBACK = {
+		name: 'Red Teamer',
+		prompt: 'You are a ruthless Red Teamer. Attack the premise and the likely answer: expose hidden assumptions, failure modes, and what would prove it wrong.'
 	};
-	if (state.rememberKeys) payload.apiKeys = state.apiKeys;
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-	} catch (err) {
+
+	const state = {
+		provider: 'openai',
+		model: 'gpt-6.1-sol',
+		isCustomModel: false,
+		apiKeys: { openai: '', anthropic: '', gemini: '', deepseek: '' },
+		corsProxy: 'https://corsproxy.io/?',
+		expertBrevity: 'succinct',
+		executiveBrevity: 'succinct',
+		directorPrompt: defaultDirectorPrompt,
+		overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree and disagree. CRITICAL: Be concise and rigorous. Synthesize the debate into 2-3 short paragraphs total. Point out missing context quickly.",
+		communicatorPrompt: "You are the Executive Communicator. Translate the Moderator's Synthesis into a clean, human-readable chatbot response.\n\n{{EXECUTIVE_BREVITY_DIRECTIVE}}",
+		history: [],
+		currentSessionId: null,
+		isRunning: false
+	};
+
+	const $ = id => document.getElementById(id);
+	const els = {};
+	['toggleSettingsBtn','settingsPanel','toggleHistoryBtn','historyPanel','historyList','clearHistoryBtn','keyOpenai','keyAnthropic','keyGemini','keyDeepseek','corsProxyInput','expertBrevitySelect','executiveBrevitySelect','activeProvider','activeModelSelect','activeModelInput','userPrompt','submitBtn','directorPrompt','overseerPrompt','communicatorPrompt','chatLog','scrollArea','emptyState','backdrop'].forEach(id => els[id] = $(id));
+
+	const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+	const isTouch = matchMedia('(pointer:coarse)').matches;
+
+	function showPanel(name) {
+		[els.settingsPanel, els.historyPanel].forEach(p => p.classList.add('hidden'));
+		if (name) els[name].classList.remove('hidden');
+		els.backdrop.classList.toggle('hidden', !name);
+	}
+	function togglePanel(name) { showPanel(els[name].classList.contains('hidden') ? name : null); }
+	function setEmpty(on) { els.emptyState.classList.toggle('hidden', !on); }
+	function scrollDown() { els.scrollArea.scrollTo({ top: els.scrollArea.scrollHeight }); }
+	function autoGrow() { const t = els.userPrompt; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 192) + 'px'; }
+	window.showPanel = showPanel;
+
+	function saveState() {
 		try {
-			const slim = { ...payload, history: [] };
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-			setRunState('History storage capacity exceeded; settings saved', 'warn');
+			localStorage.setItem('ai_council_data_v10', JSON.stringify({
+				provider: state.provider,
+				model: state.model,
+				isCustomModel: state.isCustomModel,
+				apiKeys: state.apiKeys,
+				corsProxy: state.corsProxy,
+				expertBrevity: state.expertBrevity,
+				executiveBrevity: state.executiveBrevity,
+				directorPrompt: state.directorPrompt,
+				overseerPrompt: state.overseerPrompt,
+				communicatorPrompt: state.communicatorPrompt,
+				history: state.history.slice(-30)
+			}));
+		} catch (e) { console.warn('Could not save state:', e); }
+	}
+
+	function loadState() {
+		let parsed = null;
+		try {
+			parsed = JSON.parse(
+				localStorage.getItem('ai_council_data_v10') ||
+				localStorage.getItem('ai_council_data_v9') ||
+				localStorage.getItem('ai_council_data_v8') ||
+				'null'
+			);
 		} catch (e) {}
-	}
-}
 
-function loadState() {
-	let parsed = null;
-	try { parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) {}
-	if (!parsed) {
-		for (const key of LEGACY_KEYS) {
-			try {
-				const old = JSON.parse(localStorage.getItem(key) || 'null');
-				if (old) { parsed = old; break; }
-			} catch (e) {}
+		if (parsed) {
+			state.provider = providerModels[parsed.provider] ? parsed.provider : state.provider;
+			state.model = parsed.model || state.model;
+			state.isCustomModel = !!parsed.isCustomModel;
+			state.apiKeys = { ...state.apiKeys, ...(parsed.apiKeys || {}) };
+			state.corsProxy = parsed.corsProxy !== undefined ? parsed.corsProxy : state.corsProxy;
+			state.expertBrevity = parsed.expertBrevity || state.expertBrevity;
+			state.executiveBrevity = parsed.executiveBrevity || state.executiveBrevity;
+			state.directorPrompt = parsed.directorPrompt || state.directorPrompt;
+			state.overseerPrompt = parsed.overseerPrompt || state.overseerPrompt;
+			state.communicatorPrompt = parsed.communicatorPrompt || state.communicatorPrompt;
+			state.history = Array.isArray(parsed.history) ? parsed.history : [];
 		}
-	}
-	if (parsed) {
-		state.provider = providerModels[parsed.provider] ? parsed.provider : state.provider;
-		state.model = parsed.model || state.model;
-		state.isCustomModel = !!parsed.isCustomModel;
-		state.corsProxy = parsed.corsProxy !== undefined ? parsed.corsProxy : state.corsProxy;
-		state.directorPrompt = parsed.directorPrompt || state.directorPrompt;
-		state.overseerPrompt = parsed.overseerPrompt || state.overseerPrompt;
-		state.communicatorPrompt = parsed.communicatorPrompt || state.communicatorPrompt;
-		state.history = Array.isArray(parsed.history) ? parsed.history.slice(-MAX_HISTORY_SESSIONS) : [];
-		state.rememberKeys = !!parsed.rememberKeys;
-		state.autoRetry = parsed.autoRetry !== false;
-		state.saveHistory = parsed.saveHistory !== false;
-		state.timeoutSeconds = clamp(Number(parsed.timeoutSeconds) || 90, 15, 300);
-		state.expertCount = clamp(Number(parsed.expertCount) || 3, MIN_EXPERTS, MAX_EXPERTS);
-		state.maxContextChars = clamp(Number(parsed.maxContextChars) || 12000, 2000, 50000);
-		if (state.rememberKeys && parsed.apiKeys) state.apiKeys = { ...state.apiKeys, ...parsed.apiKeys };
-	}
 
-	els.activeProvider.value = state.provider;
-	els.corsProxy.value = state.corsProxy;
-	els.directorPrompt.value = state.directorPrompt;
-	els.overseerPrompt.value = state.overseerPrompt;
-	els.communicatorPrompt.value = state.communicatorPrompt;
-	els.rememberKeys.checked = state.rememberKeys;
-	els.autoRetry.checked = state.autoRetry;
-	els.saveHistory.checked = state.saveHistory;
-	els.timeoutSeconds.value = state.timeoutSeconds;
-	els.expertCount.value = state.expertCount;
-	els.maxContextChars.value = state.maxContextChars;
-
-	if (state.rememberKeys) {
 		els.keyOpenai.value = state.apiKeys.openai;
 		els.keyAnthropic.value = state.apiKeys.anthropic;
 		els.keyGemini.value = state.apiKeys.gemini;
 		els.keyDeepseek.value = state.apiKeys.deepseek;
-	}
-	updateModelUI();
-	renderHistory();
-	updateBadges();
-}
+		els.corsProxyInput.value = state.corsProxy;
+		els.expertBrevitySelect.value = state.expertBrevity;
+		els.executiveBrevitySelect.value = state.executiveBrevity;
+		els.activeProvider.value = state.provider;
+		els.directorPrompt.value = state.directorPrompt;
+		els.overseerPrompt.value = state.overseerPrompt;
+		els.communicatorPrompt.value = state.communicatorPrompt;
 
-function updateBadges() {
-	els.providerBadge.textContent = providerName(state.provider);
-	els.modelBadge.textContent = state.model || '—';
-	els.memoryBadge.textContent = state.saveHistory ? 'Compact session memory' : 'History disabled';
-}
-
-function setRunState(text, type = 'idle') {
-	const cls = { ok: 'status-ok', warn: 'status-warn', bad: 'status-bad', idle: 'status-idle' }[type] || 'status-idle';
-	els.runState.innerHTML = `<span class="status-dot ${cls}"></span> ${escapeHtml(text)}`;
-}
-
-function updateModelUI() {
-	els.activeModelSelect.innerHTML = '';
-	const models = providerModels[state.provider] || [];
-	for (const model of models) {
-		const o = document.createElement('option');
-		o.value = model;
-		o.textContent = model;
-		els.activeModelSelect.appendChild(o);
-	}
-	const custom = document.createElement('option');
-	custom.value = 'custom';
-	custom.textContent = 'Custom Model…';
-	els.activeModelSelect.appendChild(custom);
-
-	if (state.isCustomModel) {
-		els.activeModelSelect.value = 'custom';
-		els.activeModelInput.value = state.model;
-		els.activeModelInput.classList.remove('hidden');
-	} else {
-		if (!models.includes(state.model)) state.model = models[0] || '';
-		els.activeModelSelect.value = state.model;
-		els.activeModelInput.classList.add('hidden');
-	}
-	updateBadges();
-}
-
-function escapeHtml(value) {
-	return String(value ?? '').replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c]));
-}
-
-function formatMarkdown(text) {
-	let s = escapeHtml(text);
-	s = s.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-	s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-	s = s.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-	s = s.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-	s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-	s = s.replace(/^- (.*)$/gm, '<li>$1</li>');
-	s = s.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-	s = s.replace(/\n\n/g, '</p><p>');
-	s = s.replace(/\n/g, '<br>');
-	return `<p>${s}</p>`;
-}
-
-function safeTitle(text) { return String(text).replace(/\s+/g, ' ').trim().slice(0, 70) || 'Untitled debate'; }
-
-function extractJson(raw) {
-	const text = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-	try { return JSON.parse(text); } catch (e) {}
-	const starts = [text.indexOf('['), text.indexOf('{')].filter(x => x >= 0).sort((a, b) => a - b);
-	if (!starts.length) throw new Error('No JSON object or array found.');
-	const start = starts[0];
-	const open = text[start];
-	const close = open === '[' ? ']' : '}';
-	const end = text.lastIndexOf(close);
-	if (end <= start) throw new Error('Incomplete JSON payload.');
-	try { return JSON.parse(text.slice(start, end + 1)); } catch (e) { throw new Error('Provider returned malformed JSON.'); }
-}
-
-function validateCasting(value) {
-	if (!Array.isArray(value)) throw new Error('Casting Director must return a JSON array.');
-	const members = value.slice(0, MAX_EXPERTS).map((m, i) => ({
-		name: String(m?.name || `Expert ${i + 1}`).trim(),
-		type: String(m?.type || 'other').trim().toLowerCase(),
-		objective: String(m?.objective || '').trim(),
-		prompt: String(m?.prompt || '').trim()
-	}));
-	if (members.length < MIN_EXPERTS) throw new Error(`Casting Director returned only ${members.length} experts; minimum is ${MIN_EXPERTS}.`);
-	if (members.some(m => !m.name || !m.prompt)) throw new Error('Every expert requires a name and prompt.');
-	if (!members.some(m => m.type === 'red_team' || /red\s*team/i.test(m.name) || /red\s*team/i.test(m.prompt))) throw new Error('Casting Director omitted a Red Team expert.');
-	const unique = new Set();
-	for (const m of members) {
-		const k = m.name.toLowerCase();
-		if (unique.has(k)) throw new Error('Duplicate expert titles generated.');
-		unique.add(k);
-	}
-	return members.slice(0, state.expertCount);
-}
-
-function validateAudit(value) {
-	if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Moderator returned an invalid audit payload.');
-	return {
-		consensus: String(value.consensus || ''),
-		disagreements: Array.isArray(value.disagreements) ? value.disagreements.map(String) : [],
-		strongestArguments: Array.isArray(value.strongestArguments) ? value.strongestArguments.map(String) : [],
-		weakestClaims: Array.isArray(value.weakestClaims) ? value.weakestClaims.map(String) : [],
-		missingInformation: Array.isArray(value.missingInformation) ? value.missingInformation.map(String) : [],
-		redTeamObjections: Array.isArray(value.redTeamObjections) ? value.redTeamObjections.map(String) : [],
-		recommendation: String(value.recommendation || ''),
-		confidence: ['low', 'medium', 'high'].includes(value.confidence) ? value.confidence : 'medium',
-		facts: Array.isArray(value.facts) ? value.facts.map(String) : [],
-		decisions: Array.isArray(value.decisions) ? value.decisions.map(String) : [],
-		uncertainties: Array.isArray(value.uncertainties) ? value.uncertainties.map(String) : [],
-		openQuestions: Array.isArray(value.openQuestions) ? value.openQuestions.map(String) : []
-	};
-}
-
-function auditToText(a) {
-	return [
-		`FACTS:\n${a.facts.map(x => '- ' + x).join('\n')}`,
-		`DECISIONS:\n${a.decisions.map(x => '- ' + x).join('\n')}`,
-		`UNCERTAINTIES:\n${a.uncertainties.map(x => '- ' + x).join('\n')}`,
-		`OPEN QUESTIONS:\n${a.openQuestions.map(x => '- ' + x).join('\n')}`,
-		`CONSENSUS: ${a.consensus}`,
-		`DISAGREEMENTS:\n${a.disagreements.map(x => '- ' + x).join('\n')}`,
-		`STRONGEST ARGUMENTS:\n${a.strongestArguments.map(x => '- ' + x).join('\n')}`,
-		`WEAKEST / UNSUPPORTED CLAIMS:\n${a.weakestClaims.map(x => '- ' + x).join('\n')}`,
-		`MISSING INFORMATION:\n${a.missingInformation.map(x => '- ' + x).join('\n')}`,
-		`RED TEAM OBJECTIONS:\n${a.redTeamObjections.map(x => '- ' + x).join('\n')}`,
-		`RECOMMENDATION: ${a.recommendation}`,
-		`CONFIDENCE: ${a.confidence}`
-	].join('\n\n');
-}
-
-function buildMemory(session) {
-	const turns = (session?.turns || []).slice(-6);
-	if (!turns.length) return '';
-	let out = 'SESSION MEMORY — Summaries only. Treat this as non-definitive historical context.\n';
-	turns.forEach((t, i) => {
-		out += `\nTURN ${i + 1}\nUSER: ${t.userPrompt}\nFACTS: ${(t.audit?.facts || []).join(' | ')}\nDECISIONS: ${(t.audit?.decisions || []).join(' | ')}\nUNCERTAINTIES: ${(t.audit?.uncertainties || []).join(' | ')}\nOPEN QUESTIONS: ${(t.audit?.openQuestions || []).join(' | ')}\nRECOMMENDATION: ${t.audit?.recommendation || t.synthesis || ''}\nCONFIDENCE: ${t.audit?.confidence || 'unknown'}\n`;
-	});
-	return out.slice(-state.maxContextChars);
-}
-
-function isTransient(status, errorText) {
-	return !status || [408, 409, 425, 429, 500, 502, 503, 504].includes(status) || /timeout|network|fetch|temporar|overloaded|rate.?limit/i.test(errorText || '');
-}
-
-async function fetchWithTimeout(url, options, phase) {
-	const attempts = state.autoRetry ? 3 : 1;
-	let lastErr;
-	for (let attempt = 0; attempt < attempts; attempt++) {
-		if (state.runController?.signal.aborted) throw new Error('Run interrupted by user.');
-		const timeoutController = new AbortController();
-		const timer = setTimeout(() => timeoutController.abort(), state.timeoutSeconds * 1000);
-		const onRunAbort = () => timeoutController.abort();
-		state.runController?.signal.addEventListener('abort', onRunAbort, { once: true });
-
-		try {
-			const res = await fetch(url, { ...options, signal: timeoutController.signal });
-			clearTimeout(timer);
-			const raw = await res.text();
-			if (!res.ok) {
-				const err = new Error(`${providerName(state.provider)} ${phase} failed (${res.status}): ${raw.slice(0, 500)}`);
-				err.status = res.status;
-				if (!isTransient(res.status, raw) || attempt === attempts - 1) throw err;
-				lastErr = err;
-			} else {
-				return raw;
-			}
-		} catch (err) {
-			clearTimeout(timer);
-			if (state.runController?.signal.aborted) throw new Error('Run interrupted by user.');
-			if (err.name === 'AbortError') err = new Error(`${phase} timed out after ${state.timeoutSeconds}s.`);
-			lastErr = err;
-			if (!isTransient(err.status, err.message) || attempt === attempts - 1) throw err;
-		} finally {
-			state.runController?.signal.removeEventListener('abort', onRunAbort);
-		}
-		const wait = 800 * Math.pow(2, attempt) + Math.floor(Math.random() * 300);
-		if (state.runController?.signal.aborted) throw new Error('Run interrupted by user.');
-		await sleep(wait);
-	}
-	throw lastErr || new Error('Request dispatch failed.');
-}
-
-async function fetchLLM(systemPrompt, userPrompt, contextHistory = '', phase = 'request', maxOutput = PHASE_LIMITS.expert) {
-	const apiKey = state.apiKeys[state.provider];
-	if (!apiKey) throw new Error(`API key for ${providerName(state.provider)} is missing.`);
-	let finalPrompt = contextHistory ? `${contextHistory}\n\n--- CURRENT TASK ---\n${userPrompt}` : userPrompt;
-	const started = performance.now();
-	let text = '';
-	let usage = null;
-
-	const isHostedWeb = window.location.protocol.startsWith('http');
-	const proxyPrefix = (state.corsProxy || '').trim();
-
-	if (state.provider === 'openai' || state.provider === 'deepseek') {
-		let endpoint = state.provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
-		if (state.provider === 'deepseek' && isHostedWeb && proxyPrefix) {
-			endpoint = proxyPrefix + encodeURIComponent(endpoint);
-		}
-
-		const raw = await fetchWithTimeout(endpoint, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-			body: JSON.stringify({
-				model: state.model,
-				messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: finalPrompt }],
-				max_tokens: maxOutput,
-				temperature: 0.2
-			})
-		}, phase);
-		const data = JSON.parse(raw);
-		text = data?.choices?.[0]?.message?.content || '';
-		usage = data.usage || null;
-	} else if (state.provider === 'anthropic') {
-		let endpoint = 'https://api.anthropic.com/v1/messages';
-		if (isHostedWeb && proxyPrefix) {
-			endpoint = proxyPrefix + encodeURIComponent(endpoint);
-		}
-
-		const raw = await fetchWithTimeout(endpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'x-api-key': apiKey,
-				'anthropic-version': '2023-06-01',
-				'anthropic-dangerous-direct-browser-access': 'true'
-			},
-			body: JSON.stringify({
-				model: state.model,
-				max_tokens: maxOutput,
-				temperature: 0.2,
-				system: systemPrompt,
-				messages: [{ role: 'user', content: finalPrompt }]
-			})
-		}, phase);
-		const data = JSON.parse(raw);
-		text = (data.content || []).filter(x => x.type === 'text').map(x => x.text).join('\n');
-		usage = data.usage || null;
-	} else if (state.provider === 'gemini') {
-		let endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(state.model)}:generateContent`;
-		if (isHostedWeb && proxyPrefix && !proxyPrefix.includes('corsproxy.io')) {
-			endpoint = proxyPrefix + encodeURIComponent(endpoint);
-		}
-
-		const raw = await fetchWithTimeout(endpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'x-goog-api-key': apiKey
-			},
-			body: JSON.stringify({
-				systemInstruction: { parts: [{ text: systemPrompt }] },
-				contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
-				generationConfig: { temperature: 0.2, maxOutputTokens: maxOutput }
-			})
-		}, phase);
-		const data = JSON.parse(raw);
-		text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-		usage = data.usageMetadata || null;
-	} else {
-		throw new Error('Unsupported provider.');
-	}
-
-	if (!text.trim()) throw new Error(`${phase} returned an empty response.`);
-	return { text: text.trim(), latencyMs: Math.round(performance.now() - started), usage };
-}
-
-function makeTurnContext(session) { return buildMemory(session); }
-
-function renderHistory() {
-	els.historyList.innerHTML = '';
-	if (!state.history.length) {
-		els.historyList.innerHTML = '<p class="text-slate-500 italic text-sm">No recorded debate sessions found.</p>';
-		return;
-	}
-	[...state.history].reverse().forEach(s => {
-		const row = document.createElement('button');
-		row.type = 'button';
-		row.className = 'w-full text-left p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-blue-500';
-		row.innerHTML = `<div class="text-xs text-slate-500 mb-1">${escapeHtml(new Date(s.id).toLocaleString())} · ${escapeHtml(s.provider || 'unknown')} / ${escapeHtml(s.model || 'unknown')}</div><div class="text-sm text-slate-200 font-semibold truncate">${escapeHtml(s.title)}</div><div class="text-xs text-slate-600 mt-1">${s.turns?.length || 0} turn(s)</div>`;
-		row.onclick = () => loadHistorySession(s);
-		els.historyList.appendChild(row);
-	});
-}
-
-function renderUser(prompt) {
-	const wrap = document.createElement('div');
-	wrap.className = 'flex justify-end';
-	wrap.innerHTML = `<div class="bg-blue-600 text-white p-4 rounded-xl max-w-3xl shadow-sm text-sm">${formatMarkdown(prompt)}</div>`;
-	els.chatLog.appendChild(wrap);
-}
-
-function renderTurn(turn) {
-	const wrapper = document.createElement('div');
-	wrapper.className = 'flex justify-start';
-	const confidence = turn.audit?.confidence || 'unknown';
-	wrapper.innerHTML = `<div class="bg-slate-900 p-6 rounded-xl shadow-lg border ${turn.degraded ? 'border-amber-900/70' : 'border-emerald-900/50'} w-full">
-		<div class="flex flex-col md:flex-row justify-between gap-3 mb-4">
-			<div>
-				<h2 class="text-xl font-bold ${turn.degraded ? 'text-amber-400' : 'text-emerald-400'}">${turn.degraded ? 'Council Verdict — Degraded Execution' : 'Council Verdict'}</h2>
-				<p class="text-xs text-slate-600 mt-1">${escapeHtml(turn.provider || '')} · ${escapeHtml(turn.model || '')} · Confidence: ${escapeHtml(confidence)} · ${turn.metrics?.totalMs ? Math.round(turn.metrics.totalMs / 1000) + 's' : ''}</p>
-			</div>
-		</div>
-		<div class="markdown-content text-slate-200 text-base leading-relaxed">${formatMarkdown(turn.executive || 'No executive output was produced.')}</div>
-		<details class="mt-6 group border-t border-slate-800 pt-4">
-			<summary class="text-sm font-bold text-slate-400 cursor-pointer flex items-center gap-2 hover:text-slate-200">
-				<span class="group-open:rotate-90 transition-transform">▶</span> View Audit & Transcripts
-			</summary>
-			<div class="mt-6 space-y-6">
-				<div class="bg-slate-950 p-5 rounded-xl border border-blue-900/30">
-					<h3 class="font-bold text-blue-400 mb-3 text-sm">Moderator Audit</h3>
-					<div class="markdown-content text-sm text-slate-400 leading-relaxed">${formatMarkdown(turn.synthesis || 'Audit unavailable.')}</div>
-				</div>
-				<div>
-					<h3 class="font-bold text-slate-300 mb-3 text-sm">Council Experts</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						${(turn.council || []).map(c => `
-							<div class="bg-slate-950 p-4 rounded-xl border ${c.ok ? 'border-slate-800' : 'border-red-900/50'}">
-								<div class="flex justify-between gap-2">
-									<h4 class="font-bold text-purple-400 text-sm mb-2">${escapeHtml(c.name)}</h4>
-									<span class="text-[10px] text-slate-600">${c.ok ? 'OK' : 'FAILED'}</span>
-								</div>
-								<p class="text-[10px] text-slate-600 mb-2">${escapeHtml(c.type \vert{}\vert{} 'other')} ·${escapeHtml(c.latencyMs ? c.latencyMs + 'ms' : '')}</p>
-								<div class="markdown-content text-xs text-slate-400 leading-relaxed">${formatMarkdown(c.raw)}</div>
-							</div>
-						`).join('')}
-					</div>
-				</div>
-				<div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-					<h3 class="font-bold text-slate-300 mb-2 text-sm">Execution Metrics</h3>
-					<div class="text-xs text-slate-500 grid grid-cols-2 md:grid-cols-4 gap-3">
-						<span>Experts: ${turn.metrics?.expertCount || 0}</span>
-						<span>Failures: ${turn.metrics?.failures || 0}</span>
-						<span>Requests: ${turn.metrics?.requests || 0}</span>
-						<span>Total Time: ${turn.metrics?.totalMs ? Math.round(turn.metrics.totalMs / 1000) + 's' : '—'}</span>
-					</div>
-				</div>
-			</div>
-		</details>
-	</div>`;
-	els.chatLog.appendChild(wrapper);
-}
-
-function loadHistorySession(session) {
-	state.currentSessionId = session.id;
-	els.chatLog.innerHTML = '';
-	(session.turns || []).forEach(t => {
-		renderUser(t.userPrompt);
-		renderTurn(t);
-	});
-	els.historyPanel.classList.add('hidden');
-	window.scrollTo(0, document.body.scrollHeight);
-}
-
-function createSession(prompt) {
-	const session = { id: Date.now(), title: safeTitle(prompt), provider: state.provider, model: state.model, createdAt: nowIso(), turns: [] };
-	state.history.push(session);
-	state.currentSessionId = session.id;
-	return session;
-}
-
-function currentSession() { return state.history.find(s => s.id === state.currentSessionId) || null; }
-
-async function runDynamicCouncil() {
-	if (state.isRunning) return;
-	const promptText = els.userPrompt.value.trim();
-	if (!promptText) return alert('Please enter a premise for the council.');
-	if (!state.apiKeys[state.provider]) return alert(`Configure your ${providerName(state.provider)} API key in Settings.`);
-	if (!state.model.trim()) return alert('Please select or specify a model ID.');
-
-	state.isRunning = true;
-	state.runController = new AbortController();
-	state.runMetrics = { requests: 0, failures: 0, start: performance.now() };
-	els.submitBtn.disabled = true;
-	els.stopBtn.classList.remove('hidden');
-	setRunState('Executing council phases', 'warn');
-
-	els.settingsPanel.classList.add('hidden');
-	els.historyPanel.classList.add('hidden');
-	els.chatLog.classList.remove('hidden');
-	renderUser(promptText);
-	els.userPrompt.value = '';
-
-	let session = currentSession();
-	if (!session) session = createSession(promptText);
-	session.provider = state.provider;
-	session.model = state.model;
-
-	const turn = { id: Date.now(), userPrompt: promptText, provider: state.provider, model: state.model, council: [], synthesis: '', audit: null, executive: '', degraded: false, metrics: {} };
-	const loading = document.createElement('div');
-	loading.id = uid('loading');
-	loading.className = 'flex justify-start';
-	loading.innerHTML = '<div class="bg-slate-900 p-6 rounded-xl border border-slate-800 w-full"><span class="italic text-slate-400 animate-pulse-fast">Phase 0: Director is selecting council personas…</span></div>';
-	els.chatLog.appendChild(loading);
-	window.scrollTo(0, document.body.scrollHeight);
-
-	const status = () => loading.querySelector('span');
-	const context = makeTurnContext(session);
-	const started = performance.now();
-
-	try {
-		state.runMetrics.requests++;
-		const director = await fetchLLM(
-			state.directorPrompt.replace(/\{\{EXPERT_COUNT\}\}/g, String(state.expertCount)),
-			promptText,
-			context,
-			'Casting Director',
-			PHASE_LIMITS.director
-		);
-		const members = validateCasting(extractJson(director.text));
-
-		status().textContent = `Phase 1: ${members.length} experts deliberating in parallel…`;
-		const results = await Promise.all(members.map(async (member, idx) => {
-			state.runMetrics.requests++;
-			try {
-				const r = await fetchLLM(
-					member.prompt,
-					`Direct prompt analysis required. Your designated analytical objective is: ${member.objective || member.name}. Operate independently; other agent streams are isolated.`,
-					context,
-					'Expert ' + member.name,
-					PHASE_LIMITS.expert
-				);
-				return { id: idx, name: member.name, type: member.type, objective: member.objective, prompt: member.prompt, raw: r.text, ok: true, latencyMs: r.latencyMs, usage: r.usage };
-			} catch (e) {
-				state.runMetrics.failures++;
-				return { id: idx, name: member.name, type: member.type, objective: member.objective, prompt: member.prompt, raw: `Sub-agent error: ${e.message}`, ok: false, error: e.message };
-			}
-		}));
-
-		turn.council = results;
-		const successful = results.filter(x => x.ok);
-		if (successful.length < 2) throw new Error('Quorum failure: fewer than two expert nodes completed execution.');
-
-		status().textContent = 'Phase 2: Moderator compiling and auditing council transcripts…';
-		const transcript = successful.map(c => `--- ${c.name} [${c.type}] ---\nOBJECTIVE: ${c.objective}\nRESPONSE:\n${c.raw}`).join('\n\n');
-		state.runMetrics.requests++;
-		const auditResult = await fetchLLM(
-			state.overseerPrompt,
-			`USER QUESTION:\n${promptText}\n\nCOUNCIL SUBMISSIONS:\n${transcript}`,
-			context,
-			'Moderator',
-			PHASE_LIMITS.moderator
-		);
-		turn.audit = validateAudit(extractJson(auditResult.text));
-		turn.synthesis = auditToText(turn.audit);
-
-		status().textContent = 'Phase 3: Executive synthesis generation…';
-		state.runMetrics.requests++;
-		const exec = await fetchLLM(
-			state.communicatorPrompt,
-			`USER QUESTION:\n${promptText}\n\nAUDITED COUNCIL RESULT:\n${turn.synthesis}`,
-			context,
-			'Executive Communicator',
-			PHASE_LIMITS.executive
-		);
-		turn.executive = exec.text;
-	} catch (err) {
-		state.runMetrics.failures++;
-		turn.degraded = true;
-		turn.executive = `Execution halted.\n\n**Details:** ${err.message}\n\nNo unverified recommendation is generated.`;
-		turn.synthesis = `Process aborted prior to complete verification: ${err.message}`;
-		setRunState('Execution failed', 'bad');
-	} finally {
-		turn.metrics = {
-			requests: state.runMetrics.requests,
-			failures: state.runMetrics.failures,
-			expertCount: turn.council.length,
-			totalMs: Math.round(performance.now() - started)
-		};
-		session.turns.push(turn);
-		if (state.saveHistory) saveState();
+		updateModelDropdownUI();
 		renderHistory();
-		loading.remove();
-		renderTurn(turn);
-		state.isRunning = false;
-		state.abortController = null;
-		state.runController = null;
-		els.submitBtn.disabled = false;
-		els.stopBtn.classList.add('hidden');
-		if (!turn.degraded) setRunState('Ready', 'ok');
-		window.scrollTo(0, document.body.scrollHeight);
 	}
-}
 
-function exportCurrentDebate() {
-	const session = currentSession();
-	if (!session || !session.turns.length) return alert('No active session available to export.');
-	let md = `# AI Council Debate Export\n\n**Date:** ${new Date(session.id).toLocaleString()}\n**Provider:** ${session.provider}\n**Model:** ${session.model}\n\n---\n\n`;
-	session.turns.forEach((t, i) => {
-		md += `## Turn ${i + 1}\n\n### User Prompt\n\n${t.userPrompt}\n\n### Executive Synthesis\n\n${t.executive}\n\n### Moderator Audit\n\n${t.synthesis}\n\n### Raw Expert Logs\n\n`;
-		(t.council || []).forEach(c => { md += `#### ${c.name} [${c.type}]\n\n${c.raw}\n\n`; });
-		md += '---\n\n';
-	});
-	downloadBlob(md, `council_session_${session.id}.md`, 'text/markdown');
-}
-
-function exportJson() {
-	const session = currentSession();
-	if (!session) return alert('No active session available to export.');
-	downloadBlob(JSON.stringify(session, null, 2), `council_session_${session.id}.json`, 'application/json');
-}
-
-function downloadBlob(text, name, type) {
-	const blob = new Blob([text], { type });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement('a');
-	a.href = url;
-	a.download = name;
-	document.body.appendChild(a);
-	a.click();
-	a.remove();
-	setTimeout(() => URL.revokeObjectURL(url), 500);
-}
-
-function newDebate() {
-	if (state.isRunning) return alert('Stop the active run before initializing a new session.');
-	state.currentSessionId = null;
-	els.chatLog.innerHTML = '';
-	els.userPrompt.value = '';
-	setRunState('Ready', 'idle');
-	window.scrollTo(0, 0);
-}
-
-function bind() {
-	document.getElementById('newDebateBtn').onclick = newDebate;
-	document.getElementById('exportBtn').onclick = exportCurrentDebate;
-	document.getElementById('exportJsonBtn').onclick = exportJson;
-	document.getElementById('settingsBtn').onclick = () => {
-		els.settingsPanel.classList.toggle('hidden');
-		els.historyPanel.classList.add('hidden');
-	};
-	document.getElementById('historyBtn').onclick = () => {
-		els.historyPanel.classList.toggle('hidden');
-		els.settingsPanel.classList.add('hidden');
-	};
-	document.getElementById('clearHistoryBtn').onclick = () => {
-		if (confirm('Clear all debate history?')) {
-			state.history = [];
-			state.currentSessionId = null;
-			saveState();
-			renderHistory();
-			els.chatLog.innerHTML = '';
-		}
-	};
-	document.getElementById('clearKeysBtn').onclick = () => {
-		state.apiKeys = { openai: '', anthropic: '', gemini: '', deepseek: '' };
-		els.keyOpenai.value = els.keyAnthropic.value = els.keyGemini.value = els.keyDeepseek.value = '';
-		state.rememberKeys = false;
-		els.rememberKeys.checked = false;
-		saveState();
-	};
-
-	const keyMap = { keyOpenai: 'openai', keyAnthropic: 'anthropic', keyGemini: 'gemini', keyDeepseek: 'deepseek' };
-	Object.entries(keyMap).forEach(([id, p]) => els[id].addEventListener('input', e => {
-		state.apiKeys[p] = e.target.value.trim();
-		if (state.rememberKeys) saveState();
-	}));
-
-	els.corsProxy.oninput = e => { state.corsProxy = e.target.value.trim(); saveState(); };
-	els.rememberKeys.onchange = e => {
-		state.rememberKeys = e.target.checked;
-		if (!state.rememberKeys) {
-			const p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-			delete p.apiKeys;
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
-		} else saveState();
-	};
-	els.autoRetry.onchange = e => { state.autoRetry = e.target.checked; saveState(); };
-	els.saveHistory.onchange = e => { state.saveHistory = e.target.checked; saveState(); updateBadges(); };
-	els.timeoutSeconds.onchange = e => {
-		state.timeoutSeconds = clamp(Number(e.target.value) || 90, 15, 300);
-		e.target.value = state.timeoutSeconds;
-		saveState();
-	};
-	els.expertCount.onchange = e => {
-		state.expertCount = clamp(Number(e.target.value) || 3, MIN_EXPERTS, MAX_EXPERTS);
-		e.target.value = state.expertCount;
-		saveState();
-	};
-	els.maxContextChars.onchange = e => {
-		state.maxContextChars = clamp(Number(e.target.value) || 12000, 2000, 50000);
-		e.target.value = state.maxContextChars;
-		saveState();
-	};
-	els.activeProvider.onchange = e => {
-		if (state.isRunning) return;
-		state.provider = e.target.value;
-		state.isCustomModel = false;
-		state.model = providerModels[state.provider][0];
-		updateModelUI();
-		saveState();
-	};
-	els.activeModelSelect.onchange = e => {
-		if (e.target.value === 'custom') {
-			state.isCustomModel = true;
+	function updateModelDropdownUI() {
+		els.activeModelSelect.innerHTML = '';
+		const models = providerModels[state.provider] || [];
+		[...models, 'custom'].forEach(m => {
+			const opt = document.createElement('option');
+			opt.value = m;
+			opt.textContent = m === 'custom' ? 'Custom Model...' : m;
+			els.activeModelSelect.appendChild(opt);
+		});
+		if (state.isCustomModel) {
+			els.activeModelSelect.value = 'custom';
+			els.activeModelInput.value = state.model;
 			els.activeModelInput.classList.remove('hidden');
-			els.activeModelInput.focus();
 		} else {
-			state.isCustomModel = false;
-			state.model = e.target.value;
+			if (!models.includes(state.model)) state.model = models[0] || '';
+			els.activeModelSelect.value = state.model;
 			els.activeModelInput.classList.add('hidden');
 		}
-		updateBadges();
-		saveState();
-	};
-	els.activeModelInput.oninput = e => {
-		state.model = e.target.value.trim();
-		updateBadges();
-		saveState();
-	};
-	els.directorPrompt.oninput = e => { state.directorPrompt = e.target.value; saveState(); };
-	els.overseerPrompt.oninput = e => { state.overseerPrompt = e.target.value; saveState(); };
-	els.communicatorPrompt.oninput = e => { state.communicatorPrompt = e.target.value; saveState(); };
-	els.submitBtn.onclick = runDynamicCouncil;
-	els.userPrompt.onkeydown = e => {
-		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-			e.preventDefault();
-			runDynamicCouncil();
-		}
-	};
-	els.stopBtn.onclick = () => {
-		if (state.runController) {
-			state.runController.abort();
-			setRunState('Aborting…', 'warn');
-		}
-	};
-}
+	}
 
-loadState();
-bind();
+	function init() {
+		loadState();
+
+		els.toggleSettingsBtn.addEventListener('click', () => togglePanel('settingsPanel'));
+		els.toggleHistoryBtn.addEventListener('click', () => togglePanel('historyPanel'));
+		els.clearHistoryBtn.addEventListener('click', () => {
+			if (confirm('Clear all debate history?')) {
+				state.history = [];
+				state.currentSessionId = null;
+				els.chatLog.innerHTML = '';
+				setEmpty(true);
+				saveState();
+				renderHistory();
+			}
+		});
+
+		[['keyOpenai','openai'],['keyAnthropic','anthropic'],['keyGemini','gemini'],['keyDeepseek','deepseek']].forEach(([id, p]) =>
+			els[id].addEventListener('input', e => { state.apiKeys[p] = e.target.value.trim(); saveState(); }));
+
+		els.corsProxyInput.addEventListener('input', e => { state.corsProxy = e.target.value.trim(); saveState(); });
+		els.expertBrevitySelect.addEventListener('change', e => { state.expertBrevity = e.target.value; saveState(); });
+		els.executiveBrevitySelect.addEventListener('change', e => { state.executiveBrevity = e.target.value; saveState(); });
+
+		els.activeProvider.addEventListener('change', e => {
+			if (state.isRunning) { e.target.value = state.provider; return; }
+			state.provider = e.target.value;
+			state.isCustomModel = false;
+			state.model = providerModels[state.provider][0];
+			updateModelDropdownUI();
+			saveState();
+		});
+
+		els.activeModelSelect.addEventListener('change', e => {
+			if (e.target.value === 'custom') {
+				state.isCustomModel = true;
+				els.activeModelInput.classList.remove('hidden');
+				els.activeModelInput.focus();
+				state.model = els.activeModelInput.value.trim();
+			} else {
+				state.isCustomModel = false;
+				els.activeModelInput.classList.add('hidden');
+				state.model = e.target.value;
+			}
+			saveState();
+		});
+
+		els.activeModelInput.addEventListener('input', e => { state.model = e.target.value.trim(); saveState(); });
+		els.directorPrompt.addEventListener('input', e => { state.directorPrompt = e.target.value; saveState(); });
+		els.overseerPrompt.addEventListener('input', e => { state.overseerPrompt = e.target.value; saveState(); });
+		els.communicatorPrompt.addEventListener('input', e => { state.communicatorPrompt = e.target.value; saveState(); });
+		els.submitBtn.addEventListener('click', runDynamicCouncil);
+		els.userPrompt.addEventListener('keydown', e => {
+			if (e.key === 'Enter' && !e.isComposing && (e.ctrlKey || e.metaKey || (!e.shiftKey && !isTouch))) {
+				e.preventDefault();
+				runDynamicCouncil();
+			}
+		});
+		els.userPrompt.addEventListener('input', autoGrow);
+		els.backdrop.addEventListener('click', () => showPanel(null));
+		document.addEventListener('keydown', e => { if (e.key === 'Escape') showPanel(null); });
+	}
+
+	window.startNewDebate = () => {
+		if (state.isRunning) return alert('Wait for the current run to finish.');
+		state.currentSessionId = null;
+		els.chatLog.innerHTML = '';
+		setEmpty(true);
+		els.userPrompt.value = '';
+		autoGrow();
+	};
+
+	function renderHistory() {
+		els.historyList.innerHTML = '';
+		if (!state.history.length) {
+			els.historyList.innerHTML = '<p class="text-slate-500 italic text-sm">No past debates found.</p>';
+			return;
+		}
+		[...state.history].reverse().forEach(session => {
+			const row = document.createElement('div');
+			row.className = 'p-3 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 transition-colors';
+			row.innerHTML = `<div class="text-xs text-slate-500 mb-1">${esc(new Date(session.id).toLocaleString())}</div><div class="text-sm text-slate-200 font-semibold truncate">${esc(session.title)}</div>`;
+			row.addEventListener('click', () => loadHistorySession(session));
+			els.historyList.appendChild(row);
+		});
+	}
+
+	function generateTurnMarkdown(turn, turnIdx = null) {
+		const prefix = turnIdx !== null ? `Turn ${turnIdx + 1}` : 'Turn';
+		let md = `## 💬 ${prefix}: User Prompt\n\n${turn.userPrompt}\n\n`;
+		md += `### 🎯 Executive Summary\n\n${turn.executive}\n\n`;
+		md += `### ⚖️ Moderator Synthesis\n\n${turn.synthesis}\n\n`;
+		md += `### 🗣️ Council Transcripts\n\n`;
+		turn.council.forEach(c => {
+			md += `#### [ ${c.name} ]\n\n${c.raw}\n\n`;
+		});
+		return md;
+	}
+
+	window.copyTurnText = (turnId, btnEl) => {
+		const session = state.history.find(s => s.id === state.currentSessionId);
+		if (!session) return;
+		const turn = session.turns.find(t => t.id === turnId);
+		if (!turn) return;
+
+		const fullText = generateTurnMarkdown(turn);
+		navigator.clipboard.writeText(fullText).then(() => {
+			if (btnEl) {
+				const orig = btnEl.innerHTML;
+				btnEl.innerHTML = '✅ Copied!';
+				setTimeout(() => { btnEl.innerHTML = orig; }, 1500);
+			}
+		}).catch(err => {
+			alert('Failed to copy to clipboard: ' + err.message);
+		});
+	};
+
+	window.downloadTurn = (turnId) => {
+		const session = state.history.find(s => s.id === state.currentSessionId);
+		if (!session) return;
+		const turn = session.turns.find(t => t.id === turnId);
+		if (!turn) return;
+
+		let md = `# AI Council Turn Export\n\n**Date:** ${new Date(turn.id || Date.now()).toLocaleString()}\n**Engine:** ${turn.provider || ''} (${turn.model || ''})\n\n---\n\n`;
+		md += generateTurnMarkdown(turn);
+
+		const url = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `council_turn_${turn.id || Date.now()}.md`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 500);
+	};
+
+	window.exportCurrentDebate = () => {
+		const session = state.history.find(s => s.id === state.currentSessionId);
+		if (!session || !session.turns.length) return alert('No active debate to export.');
+		let md = `# AI Council Debate Export\n\n**Date:** ${new Date(session.id).toLocaleString()}\n\n---\n\n`;
+		session.turns.forEach((t, i) => {
+			md += generateTurnMarkdown(t, i) + '---\n\n';
+		});
+		const url = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `council_session_${session.id}.md`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 500);
+	};
+
+	function loadHistorySession(session) {
+		if (state.isRunning) return;
+		state.currentSessionId = session.id;
+		els.chatLog.innerHTML = '';
+		setEmpty(false);
+		session.turns.forEach(renderCompletedTurn);
+		showPanel(null);
+		scrollDown();
+	}
+
+	const AVATAR = '<div class="shrink-0 w-8 h-8 rounded-full bg-emerald-900/60 flex items-center justify-center">⚖️</div>';
+
+	function userBubble(text) {
+		return `<div class="flex justify-end"><div class="markdown-content bg-slate-800 text-slate-100 px-4 py-2.5 rounded-3xl rounded-br-md max-w-[85%] text-[15px] leading-relaxed break-words">${formatMarkdown(text)}</div></div>`;
+	}
+
+	function turnHtml(turn) {
+		const turnId = turn.id || Date.now();
+		return `<div class="flex gap-3" data-turn-id="${turnId}">${AVATAR}<div class="min-w-0 flex-1">
+<div class="flex items-center justify-between gap-2 mb-1.5">
+	<div class="text-[11px] text-slate-500">${esc(turn.provider || '')} · ${esc(turn.model || '')}</div>
+	<div class="flex items-center gap-1.5">
+		<button onclick="copyTurnText(${turnId}, this)" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors" title="Copy full response & audit to clipboard">
+			📋 <span>Copy</span>
+		</button>
+		<button onclick="downloadTurn(${turnId})" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors" title="Download response & audit as Markdown">
+			📥 <span>DL</span>
+		</button>
+	</div>
+</div>
+<div class="markdown-content text-slate-200 text-[15px] leading-relaxed break-words">${formatMarkdown(turn.executive)}</div>
+<details class="mt-3 group">
+<summary class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 cursor-pointer hover:text-slate-300 py-1 transition-colors"><span class="group-open:rotate-90 transition-transform">▶</span> Council deliberation</summary>
+<div class="mt-3 space-y-4">
+<div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
+<h3 class="font-bold text-blue-400 mb-2 text-xs uppercase tracking-wide">Moderator audit</h3>
+<div class="markdown-content text-sm text-slate-400 leading-relaxed break-words">${formatMarkdown(turn.synthesis)}</div>
+</div>
+${turn.council.map(c => `<div class="bg-slate-900 p-4 rounded-2xl border ${c.ok === false ? 'border-red-900/50' : 'border-slate-800'}">
+<h4 class="font-bold text-purple-400 mb-2 text-xs uppercase tracking-wide">${esc(c.name)}</h4>
+<div class="markdown-content text-sm text-slate-400 leading-relaxed break-words">${formatMarkdown(c.raw)}</div>
+</div>`).join('')}
+</div>
+</details>
+</div></div>`;
+	}
+
+	function renderCompletedTurn(turn) {
+		els.chatLog.insertAdjacentHTML('beforeend', userBubble(turn.userPrompt) + turnHtml(turn));
+	}
+
+	// High-fidelity Markdown + KaTeX rendering
+	function formatMarkdown(text) {
+		if (!text) return '';
+		const blocks = [];
+
+		// Step 1: Protect preformatted code blocks
+		let s = text.replace(/```(?:\w*\n)?([\s\S]*?)```/g, (_, c) => {
+			blocks.push(`<pre><code>${esc(c)}</code></pre>`);
+			return `\u0000${blocks.length - 1}\u0000`;
+		});
+
+		// Step 2: Protect and render display math: $$ ... $$ and \[ ... \]
+		s = s.replace(/(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\])/g, (m) => {
+			const math = m.startsWith('$$') ? m.slice(2, -2) : m.slice(2, -2);
+			let rendered;
+			try {
+				if (typeof katex !== 'undefined') {
+					rendered = katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
+				} else {
+					rendered = `<div class="katex-display"><code>${esc(math)}</code></div>`;
+				}
+			} catch (e) {
+				rendered = `<div class="katex-display"><code>${esc(math)}</code></div>`;
+			}
+			blocks.push(rendered);
+			return `\u0000${blocks.length - 1}\u0000`;
+		});
+
+		// Step 3: Protect and render inline math: $ ... $ and \( ... \)
+		s = s.replace(/(\\\([\s\S]*?\\\)|\$(?!\s)([^\$\n]+?)(?<!\s)\$)/g, (m, p1, p2) => {
+			const math = m.startsWith('\\(') ? m.slice(2, -2) : (p2 !== undefined ? p2 : m.slice(1, -1));
+			// Ignore simple currency values like $50 or $1,000
+			if (/^\s*[\d,.]+\s*$/.test(math)) return m;
+			let rendered;
+			try {
+				if (typeof katex !== 'undefined') {
+					rendered = katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
+				} else {
+					rendered = `<code>${esc(math)}</code>`;
+				}
+			} catch (e) {
+				rendered = `<code>${esc(math)}</code>`;
+			}
+			blocks.push(rendered);
+			return `\u0000${blocks.length - 1}\u0000`;
+		});
+
+		// Step 4: Escape remaining raw markdown text to prevent XSS
+		s = esc(s);
+
+		// Step 5: Process Markdown formatting
+		s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+			.replace(/`([^`\n]+)`/g, '<code>$1</code>')
+			.replace(/^### (.*)$/gm, '<h3>$1</h3>')
+			.replace(/^## (.*)$/gm, '<h2>$1</h2>')
+			.replace(/^[-*•] (.*)$/gm, '<li>$1</li>')
+			.replace(/(?:<li>.*<\/li>\n?)+/g, m => `<ul>${m.replace(/\n/g, '')}</ul>\n`);
+
+		s = s.split(/\n{2,}/).map(p => {
+			p = p.trim();
+			if (!p) return '';
+			return /^(<h[23]>|<ul>|\u0000)/.test(p) ? p.replace(/\n/g, '<br>') : `<p>${p.replace(/\n/g, '<br>')}</p>`;
+		}).join('');
+
+		// Step 6: Restore code and math blocks
+		return s.replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[i]);
+	}
+
+	async function fetchLLM(systemPrompt, userPrompt, contextHistory = '') {
+		const apiKey = state.apiKeys[state.provider];
+		if (!apiKey) throw new Error(`API Key for ${state.provider} is missing.`);
+		const finalPrompt = contextHistory ? `--- CONVERSATION HISTORY ---\n${contextHistory}\n\n--- CURRENT PROMPT ---\n${userPrompt}` : userPrompt;
+		
+		const isHosted = window.location.protocol.startsWith('http');
+		const proxy = (state.corsProxy || '').trim();
+
+		let endpoint = '';
+		let fetchOptions = {};
+
+		if (state.provider === 'openai' || state.provider === 'deepseek') {
+			endpoint = state.provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
+			
+			if (state.provider === 'deepseek' && isHosted && proxy) {
+				endpoint = proxy + encodeURIComponent(endpoint);
+			}
+
+			fetchOptions = {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${apiKey}`
+				},
+				body: JSON.stringify({
+					model: state.model,
+					messages: [
+						{ role: 'system', content: systemPrompt },
+						{ role: 'user', content: finalPrompt }
+					]
+				})
+			};
+		} else if (state.provider === 'anthropic') {
+			endpoint = 'https://api.anthropic.com/v1/messages';
+			fetchOptions = {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-api-key': apiKey,
+					'anthropic-version': '2023-06-01',
+					'anthropic-dangerous-direct-browser-access': 'true'
+				},
+				body: JSON.stringify({
+					model: state.model,
+					max_tokens: 4096,
+					system: systemPrompt,
+					messages: [{ role: 'user', content: finalPrompt }]
+				})
+			};
+		} else if (state.provider === 'gemini') {
+			const cleanModel = state.model.replace(/^models\//, '');
+			endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+			
+			fetchOptions = {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-goog-api-key': apiKey
+				},
+				body: JSON.stringify({
+					systemInstruction: { parts: [{ text: systemPrompt }] },
+					contents: [{ role: 'user', parts: [{ text: finalPrompt }] }]
+				})
+			};
+		}
+
+		let res, text;
+		try {
+			res = await fetch(endpoint, fetchOptions);
+		} catch (networkErr) {
+			if (state.provider === 'deepseek' && !proxy) {
+				throw new Error("DeepSeek blocked by browser CORS on GitHub Pages. Go to Settings ⚙️ and configure the CORS proxy prefix (e.g. https://corsproxy.io/?).");
+			}
+			throw new Error(`Connection error (${networkErr.message}). Check your network and CORS proxy settings.`);
+		}
+
+		if (!res.ok) {
+			const errBody = await res.text();
+			let detail = errBody;
+			try {
+				const jsonErr = JSON.parse(errBody);
+				detail = jsonErr.error?.message || jsonErr.message || errBody;
+			} catch (_) {}
+			throw new Error(`${state.provider.toUpperCase()} error (${res.status}): ${detail}`);
+		}
+
+		const data = await res.json();
+		if (state.provider === 'openai' || state.provider === 'deepseek') {
+			text = data.choices?.[0]?.message?.content;
+		} else if (state.provider === 'anthropic') {
+			text = (data.content || []).filter(x => x.type === 'text').map(x => x.text).join('\n');
+		} else if (state.provider === 'gemini') {
+			text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+		}
+
+		if (!text || !text.trim()) throw new Error('The model returned an empty response.');
+		return text.trim();
+	}
+
+	function parseCast(raw) {
+		const m = raw.match(/\[[\s\S]*\]/);
+		if (!m) throw new Error('Director did not return a valid JSON array.');
+		let arr;
+		try { arr = JSON.parse(m[0]); } catch (e) { throw new Error('Director returned malformed JSON.'); }
+		let members = (Array.isArray(arr) ? arr : [])
+			.map(x => ({ name: String(x?.name || '').trim(), prompt: String(x?.prompt || '').trim() }))
+			.filter(x => x.name && x.prompt)
+			.slice(0, 4);
+		if (members.length < 2) throw new Error('Director returned fewer than 2 usable experts.');
+		if (!members.some(x => /red\s*team/i.test(x.name))) members[members.length - 1] = RED_TEAM_FALLBACK;
+		return members;
+	}
+
+	async function runDynamicCouncil() {
+		if (state.isRunning) return;
+		const promptText = els.userPrompt.value.trim();
+		if (!promptText) return alert('Please enter a premise for the council.');
+		if (!state.apiKeys[state.provider]) return alert(`Please enter your ${state.provider.toUpperCase()} API key in settings.`);
+		if (!state.model) return alert('Please select or type a model ID.');
+
+		state.isRunning = true;
+		els.submitBtn.disabled = true;
+		showPanel(null);
+
+		let session = state.history.find(s => s.id === state.currentSessionId);
+		let contextHistory = '';
+		if (session) {
+			contextHistory = session.turns.map(t => `User: ${t.userPrompt}\nCouncil Summary: ${t.executive}\n\n`).join('');
+		} else {
+			session = { id: Date.now(), title: promptText.substring(0, 40) + (promptText.length > 40 ? '...' : ''), turns: [] };
+			state.history.push(session);
+			state.currentSessionId = session.id;
+		}
+
+		const turnId = Date.now();
+		const currentTurn = { id: turnId, userPrompt: promptText, provider: state.provider, model: state.model, council: [], synthesis: '', executive: '' };
+		setEmpty(false);
+		els.userPrompt.value = '';
+		autoGrow();
+		els.chatLog.insertAdjacentHTML('beforeend', userBubble(promptText));
+
+		const loading = document.createElement('div');
+		loading.className = 'flex gap-3';
+		loading.innerHTML = AVATAR + '<div class="pt-1.5 text-sm text-slate-400"><span class="animate-pulse">Phase 0: Director is casting experts...</span></div>';
+		els.chatLog.appendChild(loading);
+		scrollDown();
+		const status = t => { loading.querySelector('span').textContent = t; };
+
+		try {
+			// Phase 0: Dynamic Casting with configured brevity directive
+			const expertBrevityDirective = expertBrevityGuidelines[state.expertBrevity] || expertBrevityGuidelines.succinct;
+			const directorSystemPrompt = state.directorPrompt.replace('{{EXPERT_BREVITY_DIRECTIVE}}', expertBrevityDirective);
+
+			const members = parseCast(await fetchLLM(directorSystemPrompt, promptText, contextHistory));
+
+			// Phase 1: Fan-out Deliberation
+			status('Phase 1: Experts are deliberating...');
+			currentTurn.council = await Promise.all(members.map(async (m, id) => {
+				try {
+					return { id, name: m.name, prompt: m.prompt, raw: await fetchLLM(m.prompt, promptText, contextHistory), ok: true };
+				} catch (err) {
+					return { id, name: m.name, prompt: m.prompt, raw: `Error: ${err.message}`, ok: false };
+				}
+			}));
+			const good = currentTurn.council.filter(c => c.ok);
+			if (!good.length) throw new Error('Every expert failed. First error: ' + currentTurn.council[0].raw);
+			const transcript = currentTurn.council.map(c => `--- ${c.name.toUpperCase()} ---\n${c.ok ? c.raw : '(this expert failed to respond)'}\n\n`).join('');
+
+			// Phase 2: Moderator Synthesis & Audit
+			status('Phase 2: Moderator compiling audit...');
+			try {
+				currentTurn.synthesis = await fetchLLM(state.overseerPrompt, `User's Latest Prompt: ${promptText}\n\n--- CURRENT COUNCIL DEBATE TRANSCRIPT ---\n\n${transcript}`, contextHistory);
+			} catch (err) {
+				currentTurn.synthesis = 'Synthesis failed due to an error: ' + err.message;
+			}
+
+			// Phase 3: Executive Summary with configured brevity directive
+			status('Phase 3: Translating executive verdict...');
+			const execBrevityDirective = executiveBrevityGuidelines[state.executiveBrevity] || executiveBrevityGuidelines.succinct;
+			const communicatorSystemPrompt = state.communicatorPrompt.replace('{{EXECUTIVE_BREVITY_DIRECTIVE}}', execBrevityDirective);
+
+			try {
+				currentTurn.executive = await fetchLLM(communicatorSystemPrompt, `Moderator Synthesis:\n\n${currentTurn.synthesis}`, contextHistory);
+			} catch (err) {
+				currentTurn.executive = 'Summary failed: ' + err.message;
+			}
+
+			session.turns.push(currentTurn);
+			loading.outerHTML = turnHtml(currentTurn);
+		} catch (err) {
+			loading.innerHTML = AVATAR + `<div class="bg-red-950/40 p-4 rounded-2xl border border-red-900/60 min-w-0 flex-1"><h2 class="text-sm font-bold text-red-400 mb-1">Council failed</h2><div class="text-sm text-slate-400 break-words">${esc(err.message)}</div></div>`;
+			if (!session.turns.length) {
+				state.history = state.history.filter(s => s !== session);
+				state.currentSessionId = null;
+			}
+		} finally {
+			saveState();
+			renderHistory();
+			state.isRunning = false;
+			els.submitBtn.disabled = false;
+			scrollDown();
+		}
+	}
+
+	init();
 </script>
 </body>
 </html>
