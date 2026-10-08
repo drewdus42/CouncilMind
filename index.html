@@ -15,33 +15,61 @@
 		}
 		.markdown-content p { margin-bottom: 0.75em; }
 		.markdown-content ul { list-style-type: disc; margin-left: 1.5em; margin-bottom: 0.75em; }
-		.markdown-content h3 { font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; }
+		.markdown-content h3 { font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: #e2e8f0; }
+		.markdown-content h2 { font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; color: #f8fafc; }
+		.markdown-content strong { color: #f8fafc; }
+		
+		/* Custom Scrollbar */
+		::-webkit-scrollbar { width: 8px; }
+		::-webkit-scrollbar-track { background: #0f172a; }
+		::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+		::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+		/* Details Tag Reset */
+		details > summary { list-style: none; }
+		details > summary::-webkit-details-marker { display: none; }
 	</style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-12">
+<body class="bg-slate-900 text-slate-300 font-sans min-h-screen pb-12 transition-colors duration-200">
 	
 	<!-- App Wrapper -->
 	<div class="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
 		
-		<!-- Header & Settings Toggle -->
-		<header class="flex justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+		<!-- Header & Controls -->
+		<header class="flex justify-between items-center bg-slate-800 p-5 rounded-xl shadow-lg border border-slate-700">
 			<div>
-				<h1 class="text-2xl font-bold text-slate-900 tracking-tight">AI Council Orchestrator</h1>
-				<p class="text-sm text-slate-500">Multi-Agent Debate Framework</p>
+				<h1 class="text-2xl font-bold text-slate-100 tracking-tight">AI Council Orchestrator</h1>
+				<p class="text-sm text-slate-400">Multi-Agent Debate Framework</p>
 			</div>
-			<button id="toggleSettingsBtn" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-semibold transition-colors">
-				⚙️ Settings
-			</button>
+			<div class="flex gap-2">
+				<button id="toggleHistoryBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">
+					📚 History
+				</button>
+				<button id="toggleSettingsBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">
+					⚙️ Settings
+				</button>
+			</div>
 		</header>
 
+		<!-- History Panel -->
+		<div id="historyPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-4">
+			<div class="flex justify-between items-center border-b border-slate-700 pb-2">
+				<h2 class="text-xl font-bold text-slate-100">Debate History</h2>
+				<button id="clearHistoryBtn" class="text-red-400 hover:text-red-300 text-sm font-semibold">Clear All</button>
+			</div>
+			<div id="historyList" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+				<!-- Populated via JS -->
+			</div>
+		</div>
+
 		<!-- Settings Panel -->
-		<div id="settingsPanel" class="hidden bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-6 transition-all">
-			<h2 class="text-xl font-bold border-b border-slate-100 pb-2">Configuration</h2>
+		<div id="settingsPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-6">
+			<h2 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-2">Configuration</h2>
 			
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 				<div class="lg:col-span-1">
-					<label class="block text-sm font-semibold mb-1 text-slate-700">Provider</label>
-					<select id="providerSelect" class="w-full p-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<label class="block text-sm font-semibold mb-1 text-slate-400">Provider</label>
+					<select id="providerSelect" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 						<option value="openai">OpenAI</option>
 						<option value="anthropic">Anthropic</option>
 						<option value="gemini">Google Gemini</option>
@@ -49,95 +77,100 @@
 					</select>
 				</div>
 				<div class="lg:col-span-1">
-					<label class="block text-sm font-semibold mb-1 text-slate-700">Model Name</label>
-					<input type="text" id="modelInput" value="gpt-4o" class="w-full p-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<label class="block text-sm font-semibold mb-1 text-slate-400">Model Name</label>
+					<input type="text" id="modelInput" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 				</div>
 				<div class="lg:col-span-2">
-					<label class="block text-sm font-semibold mb-1 text-slate-700">API Key</label>
-					<input type="password" id="apiKeyInput" placeholder="Enter your API Key (stored locally only)" class="w-full p-2.5 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+					<label class="block text-sm font-semibold mb-1 text-slate-400">API Key</label>
+					<input type="password" id="apiKeyInput" placeholder="Stored locally in browser" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 				</div>
 			</div>
 
-			<div class="border-t border-slate-100 pt-5">
+			<div class="border-t border-slate-700 pt-5">
 				<div class="flex justify-between items-center mb-4">
-					<h3 class="text-lg font-bold text-slate-800">Council Members</h3>
-					<button id="addMemberBtn" class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm font-semibold transition-colors">
+					<h3 class="text-lg font-bold text-slate-100">Council Members (Phase 1)</h3>
+					<button id="addMemberBtn" class="px-3 py-1.5 bg-blue-900/50 text-blue-300 border border-blue-800 rounded-md hover:bg-blue-800 transition-colors text-sm font-semibold">
 						+ Add Member
 					</button>
 				</div>
 				<div id="councilList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<!-- Dynamically populated via JS -->
+					<!-- Populated via JS -->
 				</div>
 			</div>
 
-			<div class="border-t border-slate-100 pt-5">
-				<label class="block text-lg font-bold mb-2 text-slate-800">Overseer Protocol (Final Synthesis)</label>
-				<textarea id="overseerPrompt" rows="3" class="w-full p-3 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+			<div class="border-t border-slate-700 pt-5 space-y-4">
+				<div>
+					<label class="block text-lg font-bold mb-2 text-slate-100">Moderator/Auditor (Phase 2)</label>
+					<textarea id="overseerPrompt" rows="3" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+				</div>
+				<div>
+					<label class="block text-lg font-bold mb-2 text-slate-100">Executive Communicator (Phase 3)</label>
+					<textarea id="communicatorPrompt" rows="3" class="w-full p-3 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+				</div>
 			</div>
 		</div>
 
 		<!-- Main Input Area -->
-		<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-			<label class="block text-lg font-bold mb-3 text-slate-900">Issue to the Council</label>
+		<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+			<label class="block text-lg font-bold mb-3 text-slate-100">Issue to the Council</label>
 			<div class="flex flex-col md:flex-row gap-4">
-				<textarea id="userPrompt" rows="2" placeholder="State your premise, dilemma, or question..." class="flex-1 p-4 border border-slate-300 rounded-lg bg-slate-50 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"></textarea>
-				<button id="submitBtn" class="px-8 py-4 bg-slate-800 text-white rounded-lg font-bold hover:bg-slate-700 transition-colors disabled:opacity-50 md:w-auto w-full flex-shrink-0">
+				<textarea id="userPrompt" rows="3" placeholder="State your premise, dilemma, or question..." class="flex-1 p-4 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-500"></textarea>
+				<button id="submitBtn" class="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition-colors disabled:opacity-50 md:w-auto w-full flex-shrink-0 shadow-lg">
 					Convene Council
 				</button>
 			</div>
 		</div>
 
-		<!-- Active Debate Grid -->
-		<div id="debateGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden">
-			<!-- Populated by JS during runtime -->
+		<!-- Final Executive Output (Visible by Default) -->
+		<div id="executiveContainer" class="hidden bg-slate-800 p-6 md:p-8 rounded-xl shadow-lg border border-emerald-900/50 mt-8 relative">
+			<div class="flex justify-between items-start mb-6 border-b border-slate-700 pb-3">
+				<div class="flex items-center gap-3">
+					<h2 class="text-2xl font-bold text-emerald-400 tracking-tight">Executive Summary</h2>
+					<span id="executiveIndicator" class="w-3 h-3 rounded-full bg-emerald-500 hidden"></span>
+				</div>
+				<button onclick="copyRawText('executiveRaw')" class="text-slate-400 hover:text-white transition-colors p-2" title="Copy Summary">
+					📋
+				</button>
+			</div>
+			<div id="executiveOutput" class="markdown-content text-slate-200 text-lg leading-relaxed"></div>
 		</div>
 
-		<!-- Final Synthesis Container -->
-		<div id="synthesisContainer" class="hidden bg-blue-50/50 p-6 md:p-8 rounded-xl shadow-sm border border-blue-200 mt-8">
-			<div class="flex items-center gap-3 mb-6 border-b border-blue-200 pb-3">
-				<h2 class="text-2xl font-bold text-blue-900 tracking-tight">Moderator Synthesis</h2>
-				<span id="synthesisIndicator" class="w-3 h-3 rounded-full bg-blue-500 hidden"></span>
+		<!-- Detailed Audit Log (Collapsible) -->
+		<details id="auditLogContainer" class="hidden bg-slate-800 rounded-xl shadow-lg border border-slate-700 mt-6 group">
+			<summary class="p-5 font-bold text-slate-300 cursor-pointer flex justify-between items-center hover:bg-slate-700/50 transition-colors rounded-xl">
+				<span class="flex items-center gap-2">
+					<span class="text-slate-500 group-open:rotate-90 transition-transform">▶</span>
+					View Detailed Council Audit & Synthesis
+				</span>
+			</summary>
+			
+			<div class="p-6 border-t border-slate-700 space-y-8">
+				<!-- Phase 2: Synthesis Container -->
+				<div class="bg-slate-900 p-6 rounded-xl border border-blue-900/30 relative">
+					<div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+						<h3 class="font-bold text-blue-400 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('synthesis')">
+							<span class="text-xs text-slate-500 w-3 text-center" id="icon-synthesis">▼</span>
+							Moderator Synthesis
+						</h3>
+						<button onclick="copyRawText('synthesisRaw')" class="text-slate-400 hover:text-white transition-colors" title="Copy Synthesis">📋</button>
+					</div>
+					<div id="content-synthesis" class="markdown-content text-slate-400 text-sm leading-relaxed overflow-hidden transition-all"></div>
+				</div>
+
+				<!-- Phase 1: Active Debate Grid -->
+				<div>
+					<h3 class="text-lg font-bold text-slate-300 mb-4 px-1">Raw Council Outputs</h3>
+					<div id="debateGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<!-- Populated by JS during runtime -->
+					</div>
+				</div>
 			</div>
-			<div id="synthesisOutput" class="markdown-content text-blue-900 text-lg leading-relaxed"></div>
-		</div>
+		</details>
 
 	</div>
 
 	<script>
-		// --- Application State ---
-		const state = {
-			provider: 'openai',
-			model: 'gpt-4o',
-			apiKey: '',
-			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree, highlight unresolvable disagreements, and provide a final executive summary. You must audit the provided logic. Do not generate original ideas, but point out if critical information is missing from the council's assessment.",
-			members: [
-				{ id: 1, name: 'Empiricist', prompt: 'You are the Empiricist. Provide only verified data, physics, and raw computational facts. Do not give opinions.' },
-				{ id: 2, name: 'Forecaster', prompt: 'You are the Forecaster. Project the 10-, 50-, and 100-year second- and third-order consequences based strictly on the user premise.' },
-				{ id: 3, name: 'Humanist', prompt: 'You are the Humanist. Evaluate the sociological and psychological impact on human populations.' },
-				{ id: 4, name: 'Red Teamer', prompt: 'You are the Red Teamer. Sabotage and find the fatal flaws in the premise. Point out worst-case scenarios.' }
-			],
-			isRunning: false
-		};
-
-		// --- DOM Elements ---
-		const els = {
-			toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
-			settingsPanel: document.getElementById('settingsPanel'),
-			providerSelect: document.getElementById('providerSelect'),
-			modelInput: document.getElementById('modelInput'),
-			apiKeyInput: document.getElementById('apiKeyInput'),
-			councilList: document.getElementById('councilList'),
-			addMemberBtn: document.getElementById('addMemberBtn'),
-			overseerPrompt: document.getElementById('overseerPrompt'),
-			userPrompt: document.getElementById('userPrompt'),
-			submitBtn: document.getElementById('submitBtn'),
-			debateGrid: document.getElementById('debateGrid'),
-			synthesisContainer: document.getElementById('synthesisContainer'),
-			synthesisOutput: document.getElementById('synthesisOutput'),
-			synthesisIndicator: document.getElementById('synthesisIndicator')
-		};
-
-		// --- Default Model Mapping ---
+		// --- State & Defaults ---
 		const defaultModels = {
 			'openai': 'gpt-4o',
 			'anthropic': 'claude-3-5-sonnet-20240620',
@@ -145,73 +178,257 @@
 			'deepseek': 'deepseek-chat'
 		};
 
-		// --- Initialization & Event Listeners ---
+		const defaultMembers = [
+			{ id: 1, name: 'Empiricist', prompt: 'You are the Empiricist. Provide only verified data, physics, and raw computational facts. Do not give opinions. Do not hallucinate premises.' },
+			{ id: 2, name: 'Forecaster', prompt: 'You are the Forecaster. Project the 10-, 50-, and 100-year second- and third-order consequences based strictly on the user premise.' },
+			{ id: 3, name: 'Humanist', prompt: 'You are the Humanist. Evaluate the sociological and psychological impact on human populations. Focus on incentives and behavior.' },
+			{ id: 4, name: 'Red Teamer', prompt: 'You are the Red Teamer. Sabotage and find the fatal flaws in the premise. Attack the core assumptions. Point out worst-case scenarios.' }
+		];
+
+		const state = {
+			provider: 'openai',
+			model: 'gpt-4o',
+			apiKey: '',
+			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree, highlight unresolvable disagreements, and provide a final executive summary. You must audit the provided logic. Do not generate original ideas, but explicitly point out if critical information or counter-factual analysis is missing from the council's assessment.",
+			communicatorPrompt: "You are the Executive Communicator. Your job is to read the Moderator's technical Synthesis and translate it into a clear, conversational, and highly succinct summary (like a standard helpful chatbot). Strip out the meta-commentary about the council's process. Just give the user the bottom-line answer, the core risks, and the final verdict in plain, easy-to-digest language. Use bullet points for readability if needed.",
+			members: JSON.parse(JSON.stringify(defaultMembers)),
+			history: [],
+			isRunning: false
+		};
+
+		window.rawOutputs = { executiveRaw: "", synthesisRaw: "" };
+
+		// --- DOM Elements ---
+		const els = {
+			toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
+			settingsPanel: document.getElementById('settingsPanel'),
+			toggleHistoryBtn: document.getElementById('toggleHistoryBtn'),
+			historyPanel: document.getElementById('historyPanel'),
+			historyList: document.getElementById('historyList'),
+			clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+			providerSelect: document.getElementById('providerSelect'),
+			modelInput: document.getElementById('modelInput'),
+			apiKeyInput: document.getElementById('apiKeyInput'),
+			councilList: document.getElementById('councilList'),
+			addMemberBtn: document.getElementById('addMemberBtn'),
+			overseerPrompt: document.getElementById('overseerPrompt'),
+			communicatorPrompt: document.getElementById('communicatorPrompt'),
+			userPrompt: document.getElementById('userPrompt'),
+			submitBtn: document.getElementById('submitBtn'),
+			executiveContainer: document.getElementById('executiveContainer'),
+			executiveOutput: document.getElementById('executiveOutput'),
+			executiveIndicator: document.getElementById('executiveIndicator'),
+			auditLogContainer: document.getElementById('auditLogContainer'),
+			contentSynthesis: document.getElementById('content-synthesis'),
+			debateGrid: document.getElementById('debateGrid')
+		};
+
+		// --- LocalStorage Management ---
+		function saveState() {
+			const toSave = {
+				provider: state.provider,
+				model: state.model,
+				apiKey: state.apiKey,
+				overseerPrompt: state.overseerPrompt,
+				communicatorPrompt: state.communicatorPrompt,
+				members: state.members,
+				history: state.history
+			};
+			localStorage.setItem('ai_council_data_v2', JSON.stringify(toSave));
+		}
+
+		function loadState() {
+			const saved = localStorage.getItem('ai_council_data_v2') || localStorage.getItem('ai_council_data');
+			if (saved) {
+				const parsed = JSON.parse(saved);
+				state.provider = parsed.provider || state.provider;
+				state.model = parsed.model || state.model;
+				state.apiKey = parsed.apiKey || state.apiKey;
+				state.overseerPrompt = parsed.overseerPrompt || state.overseerPrompt;
+				state.communicatorPrompt = parsed.communicatorPrompt || state.communicatorPrompt;
+				state.members = parsed.members && parsed.members.length > 0 ? parsed.members : state.members;
+				state.history = parsed.history || [];
+			}
+			
+			els.providerSelect.value = state.provider;
+			els.modelInput.value = state.model;
+			els.apiKeyInput.value = state.apiKey;
+			els.overseerPrompt.value = state.overseerPrompt;
+			els.communicatorPrompt.value = state.communicatorPrompt;
+			renderCouncilSettings();
+			renderHistory();
+		}
+
+		// --- Initialization ---
 		function init() {
+			loadState();
+
 			els.toggleSettingsBtn.addEventListener('click', () => {
 				els.settingsPanel.classList.toggle('hidden');
+				els.historyPanel.classList.add('hidden');
+			});
+
+			els.toggleHistoryBtn.addEventListener('click', () => {
+				els.historyPanel.classList.toggle('hidden');
+				els.settingsPanel.classList.add('hidden');
+			});
+
+			els.clearHistoryBtn.addEventListener('click', () => {
+				if(confirm("Clear all debate history?")) {
+					state.history = [];
+					saveState();
+					renderHistory();
+				}
 			});
 
 			els.providerSelect.addEventListener('change', (e) => {
 				state.provider = e.target.value;
 				els.modelInput.value = defaultModels[state.provider];
 				state.model = els.modelInput.value;
+				saveState();
 			});
 
-			els.modelInput.addEventListener('input', (e) => state.model = e.target.value);
-			els.apiKeyInput.addEventListener('input', (e) => state.apiKey = e.target.value);
-			els.overseerPrompt.addEventListener('input', (e) => state.overseerPrompt = e.target.value);
+			els.modelInput.addEventListener('input', (e) => { state.model = e.target.value; saveState(); });
+			els.apiKeyInput.addEventListener('input', (e) => { state.apiKey = e.target.value; saveState(); });
+			els.overseerPrompt.addEventListener('input', (e) => { state.overseerPrompt = e.target.value; saveState(); });
+			els.communicatorPrompt.addEventListener('input', (e) => { state.communicatorPrompt = e.target.value; saveState(); });
 
 			els.addMemberBtn.addEventListener('click', () => {
 				state.members.push({ id: Date.now(), name: 'New Persona', prompt: 'Enter conditioning rules here...' });
 				renderCouncilSettings();
+				saveState();
 			});
 
 			els.submitBtn.addEventListener('click', runCouncil);
 			els.userPrompt.addEventListener('keydown', (e) => {
 				if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCouncil();
 			});
-
-			els.overseerPrompt.value = state.overseerPrompt;
-			renderCouncilSettings();
 		}
 
-		// --- Render Settings UI ---
 		function renderCouncilSettings() {
 			els.councilList.innerHTML = '';
 			state.members.forEach((member, index) => {
 				const card = document.createElement('div');
-				card.className = 'p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col gap-3 relative group transition-colors focus-within:border-blue-300';
+				card.className = 'p-4 bg-slate-900 border border-slate-700 rounded-lg flex flex-col gap-3 group focus-within:border-blue-500';
 				card.innerHTML = `
 					<div class="flex justify-between items-center">
-						<input type="text" class="font-bold text-slate-800 bg-transparent outline-none w-2/3 border-b border-transparent focus:border-blue-400 transition-colors" value="${member.name}" onchange="updateMemberName(${index}, this.value)">
-						<button class="text-red-500 text-xs font-semibold px-2 py-1 rounded hover:bg-red-100 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity" onclick="removeMember(${index})">Remove</button>
+						<input type="text" class="font-bold text-slate-100 bg-transparent outline-none w-2/3 border-b border-transparent focus:border-blue-400" value="${member.name}" onchange="updateMemberName(${index}, this.value)">
+						<button class="text-red-400 text-xs font-semibold px-2 py-1 rounded hover:bg-red-900/50 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity" onclick="removeMember(${index})">Remove</button>
 					</div>
-					<textarea rows="3" class="w-full text-sm p-2 bg-white border border-slate-200 rounded outline-none focus:ring-2 focus:ring-blue-100 resize-y" onchange="updateMemberPrompt(${index}, this.value)">${member.prompt}</textarea>
+					<textarea rows="3" class="w-full text-sm p-2 bg-slate-800 text-slate-300 border border-slate-600 rounded outline-none focus:ring-2 focus:ring-blue-500 resize-y" onchange="updateMemberPrompt(${index}, this.value)">${member.prompt}</textarea>
 				`;
 				els.councilList.appendChild(card);
 			});
 		}
 
-		window.updateMemberName = (index, val) => state.members[index].name = val;
-		window.updateMemberPrompt = (index, val) => state.members[index].prompt = val;
-		window.removeMember = (index) => { state.members.splice(index, 1); renderCouncilSettings(); };
+		function renderHistory() {
+			els.historyList.innerHTML = '';
+			if(state.history.length === 0) {
+				els.historyList.innerHTML = '<p class="text-slate-500 italic text-sm">No past debates found.</p>';
+				return;
+			}
+			
+			[...state.history].reverse().forEach((item, index) => {
+				const date = new Date(item.timestamp).toLocaleString();
+				const row = document.createElement('div');
+				row.className = 'p-3 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-blue-500 transition-colors';
+				row.innerHTML = `
+					<div class="text-xs text-slate-500 mb-1">${date}</div>
+					<div class="text-sm text-slate-200 font-semibold truncate">${item.prompt}</div>
+				`;
+				row.addEventListener('click', () => loadHistoryItem(item));
+				els.historyList.appendChild(row);
+			});
+		}
 
-		// --- Universal API Fetcher ---
+		window.updateMemberName = (index, val) => { state.members[index].name = val; saveState(); };
+		window.updateMemberPrompt = (index, val) => { state.members[index].prompt = val; saveState(); };
+		window.removeMember = (index) => { state.members.splice(index, 1); renderCouncilSettings(); saveState(); };
+
+		window.toggleCollapse = (id) => {
+			const contentDiv = document.getElementById(`content-${id}`);
+			const icon = document.getElementById(`icon-${id}`);
+			if (contentDiv.classList.contains('hidden')) {
+				contentDiv.classList.remove('hidden');
+				icon.innerText = '▼';
+			} else {
+				contentDiv.classList.add('hidden');
+				icon.innerText = '▶';
+			}
+		};
+
+		window.copyRawText = (mapKey) => {
+			const text = window.rawOutputs[mapKey];
+			if(!text) return;
+			navigator.clipboard.writeText(text);
+		};
+
+		function loadHistoryItem(item) {
+			els.userPrompt.value = item.prompt;
+			els.debateGrid.innerHTML = '';
+			
+			item.council.forEach(memberResp => {
+				window.rawOutputs[`member-${memberResp.id}`] = memberResp.raw;
+				const box = createMemberBox(memberResp.id, memberResp.name);
+				els.debateGrid.appendChild(box);
+				
+				const contentDiv = document.getElementById(`content-${memberResp.id}`);
+				contentDiv.innerHTML = `<p>${formatMarkdown(memberResp.raw)}</p>`;
+				contentDiv.classList.remove('italic', 'text-slate-500');
+				contentDiv.classList.add('text-slate-300');
+				
+				document.getElementById(`indicator-${memberResp.id}`).classList.replace('bg-blue-500', 'bg-slate-600');
+			});
+
+			els.executiveContainer.classList.remove('hidden');
+			window.rawOutputs['executiveRaw'] = item.executive;
+			els.executiveOutput.innerHTML = `<p>${formatMarkdown(item.executive)}</p>`;
+
+			els.auditLogContainer.classList.remove('hidden');
+			els.auditLogContainer.removeAttribute('open'); // Start collapsed
+			window.rawOutputs['synthesisRaw'] = item.synthesis;
+			els.contentSynthesis.innerHTML = `<p>${formatMarkdown(item.synthesis)}</p>`;
+			els.contentSynthesis.classList.remove('italic', 'text-slate-500');
+			els.contentSynthesis.classList.add('text-slate-300');
+
+			els.historyPanel.classList.add('hidden');
+		}
+
+		function createMemberBox(id, name) {
+			const box = document.createElement('div');
+			box.className = 'p-5 bg-slate-900 rounded-xl border border-slate-700 shadow-sm flex flex-col h-full transition-all';
+			box.innerHTML = `
+				<div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+					<h3 class="font-bold text-slate-100 flex items-center gap-3 cursor-pointer select-none" onclick="toggleCollapse('${id}')">
+						<span class="text-xs text-slate-400 w-3 text-center" id="icon-${id}">▼</span>
+						<span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse-fast inline-block" id="indicator-${id}"></span>
+						<span class="tracking-wide">${name}</span>
+					</h3>
+					<button onclick="copyRawText('member-${id}')" class="text-slate-400 hover:text-white transition-colors" title="Copy Text">📋</button>
+				</div>
+				<div id="content-${id}" class="markdown-content text-sm text-slate-400 italic flex-1 overflow-hidden transition-all">Formulating argument...</div>
+			`;
+			return box;
+		}
+
+		function formatMarkdown(text) {
+			return text
+				.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+				.replace(/### (.*?)\n/g, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
+				.replace(/## (.*?)\n/g, '<h2 class="text-xl font-bold mt-5 mb-2 text-white">$1</h2>')
+				.replace(/\n\n/g, '</p><p>')
+				.replace(/\n- /g, '<br>• ')
+				.replace(/\n\* /g, '<br>• ');
+		}
+
 		async function fetchLLM(systemPrompt, userPrompt) {
 			if (!state.apiKey) throw new Error("API Key is missing.");
 			
-			// OpenAI & DeepSeek (OpenAI API Compatible)
 			if (state.provider === 'openai' || state.provider === 'deepseek') {
-				const endpoint = state.provider === 'openai' 
-					? 'https://api.openai.com/v1/chat/completions' 
-					: 'https://api.deepseek.com/chat/completions';
-				
+				const endpoint = state.provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
 				const res = await fetch(endpoint, {
 					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${state.apiKey}`
-					},
+					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}` },
 					body: JSON.stringify({
 						model: state.model,
 						messages: [
@@ -225,7 +442,6 @@
 				return data.choices[0].message.content;
 			}
 			
-			// Anthropic (Uses direct browser access header)
 			if (state.provider === 'anthropic') {
 				const res = await fetch('https://api.anthropic.com/v1/messages', {
 					method: 'POST',
@@ -239,9 +455,7 @@
 						model: state.model,
 						max_tokens: 4096,
 						system: systemPrompt,
-						messages: [
-							{ role: 'user', content: userPrompt }
-						]
+						messages: [{ role: 'user', content: userPrompt }]
 					})
 				});
 				if(!res.ok) throw new Error(await res.text());
@@ -249,7 +463,6 @@
 				return data.content[0].text;
 			}
 			
-			// Google Gemini
 			if (state.provider === 'gemini') {
 				const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${state.apiKey}`, {
 					method: 'POST',
@@ -265,109 +478,109 @@
 			}
 		}
 
-		// --- Core Orchestration Logic ---
 		async function runCouncil() {
 			const promptText = els.userPrompt.value.trim();
 			if(!promptText) return alert('Please enter a premise for the council.');
 			if(!state.apiKey) {
 				els.settingsPanel.classList.remove('hidden');
 				els.apiKeyInput.focus();
-				return alert('Please enter your API key in the settings panel.');
+				return alert('Please enter your API key.');
 			}
 			
-			// Update UI State
 			state.isRunning = true;
 			els.submitBtn.disabled = true;
 			els.submitBtn.innerText = 'Council is Deliberating...';
+			els.settingsPanel.classList.add('hidden');
+			els.historyPanel.classList.add('hidden');
 			
+			// Reset UI
 			els.debateGrid.innerHTML = '';
-			els.debateGrid.classList.remove('hidden');
-			els.synthesisContainer.classList.add('hidden');
-			els.synthesisOutput.innerHTML = '';
+			window.rawOutputs = {};
+			els.executiveContainer.classList.remove('hidden');
+			els.executiveIndicator.classList.remove('hidden');
+			els.executiveIndicator.classList.add('animate-pulse-fast');
+			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 1: Council is deliberating...</span>';
 			
-			// Build Grid UI for each Council Member
-			const memberBoxes = {};
-			state.members.forEach(member => {
-				const box = document.createElement('div');
-				box.className = 'p-6 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-full';
-				box.innerHTML = `
-					<h3 class="font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-3">
-						<span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse-fast inline-block" id="indicator-${member.id}"></span>
-						<span class="tracking-wide">${member.name}</span>
-					</h3>
-					<div id="content-${member.id}" class="markdown-content text-sm text-slate-600 italic flex-1">Formulating argument...</div>
-				`;
-				els.debateGrid.appendChild(box);
-				memberBoxes[member.id] = box;
-			});
+			els.auditLogContainer.classList.remove('hidden');
+			els.auditLogContainer.removeAttribute('open');
+			els.contentSynthesis.innerHTML = '<span class="italic text-slate-500">Awaiting council transcripts...</span>';
 			
-			// Phase 1: Fan-out execution (Run all members blindly and concurrently)
+			const historyItem = { timestamp: Date.now(), prompt: promptText, council: [], synthesis: "", executive: "" };
+			
+			// Phase 1: Fan-out
 			let transcriptBuilder = "";
 			const tasks = state.members.map(async (member) => {
+				const box = createMemberBox(member.id, member.name);
+				els.debateGrid.appendChild(box);
 				const contentDiv = document.getElementById(`content-${member.id}`);
 				const indicatorDiv = document.getElementById(`indicator-${member.id}`);
 				
 				try {
 					const response = await fetchLLM(member.prompt, promptText);
+					window.rawOutputs[`member-${member.id}`] = response;
+					historyItem.council.push({ id: member.id, name: member.name, raw: response });
 					
-					// Basic Markdown to HTML formatting for display
-					const formattedOutput = response
-						.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-						.replace(/\n\n/g, '</p><p>')
-						.replace(/\n- /g, '<br>• ');
-						
-					contentDiv.innerHTML = `<p>${formattedOutput}</p>`;
-					contentDiv.classList.remove('italic', 'text-slate-600');
-					contentDiv.classList.add('text-slate-800');
-					
+					contentDiv.innerHTML = `<p>${formatMarkdown(response)}</p>`;
+					contentDiv.classList.remove('italic', 'text-slate-500');
+					contentDiv.classList.add('text-slate-400');
 					indicatorDiv.classList.replace('bg-blue-500', 'bg-emerald-500');
 					indicatorDiv.classList.remove('animate-pulse-fast');
-					
 					return `--- ${member.name.toUpperCase()} ---\n${response}\n\n`;
 				} catch (err) {
-					contentDiv.innerHTML = `<span class="text-red-600 font-semibold">Connection Error:</span> ${err.message}`;
+					contentDiv.innerHTML = `<span class="text-red-400">Error: ${err.message}</span>`;
 					indicatorDiv.classList.replace('bg-blue-500', 'bg-red-500');
 					indicatorDiv.classList.remove('animate-pulse-fast');
-					return `--- ${member.name.toUpperCase()} ---\nError retrieving logic: ${err.message}\n\n`;
+					return `--- ${member.name.toUpperCase()} ---\nError: ${err.message}\n\n`;
 				}
 			});
 			
-			// Wait for all members to finish compiling
 			const results = await Promise.all(tasks);
 			transcriptBuilder = results.join("");
 			
-			// Phase 2: The Overseer Synthesis
-			els.synthesisContainer.classList.remove('hidden');
-			els.synthesisIndicator.classList.remove('hidden');
-			els.synthesisIndicator.classList.add('animate-pulse-fast');
-			els.synthesisOutput.innerHTML = '<span class="italic text-blue-700">The Moderator is reviewing the council transcript and auditing logic gaps...</span>';
+			// Phase 2: Synthesis
+			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 2: Moderator is compiling the audit and synthesis...</span>';
+			els.contentSynthesis.innerHTML = '<span class="italic text-slate-400 animate-pulse">Synthesizing...</span>';
 			
+			let synthesisFinal = "";
 			try {
 				const synthPrompt = `User's Original Premise: ${promptText}\n\n--- COUNCIL DEBATE TRANSCRIPT ---\n\n${transcriptBuilder}`;
-				const synthesis = await fetchLLM(state.overseerPrompt, synthPrompt);
+				synthesisFinal = await fetchLLM(state.overseerPrompt, synthPrompt);
 				
-				// Format final output
-				const formattedSynthesis = synthesis
-					.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-					.replace(/### (.*?)\n/g, '<h3 class="text-xl font-bold mt-4 mb-2">$1</h3>')
-					.replace(/\n\n/g, '</p><p>')
-					.replace(/\n- /g, '<br>• ');
-					
-				els.synthesisOutput.innerHTML = `<p>${formattedSynthesis}</p>`;
+				window.rawOutputs['synthesisRaw'] = synthesisFinal;
+				historyItem.synthesis = synthesisFinal;
+				els.contentSynthesis.innerHTML = `<p>${formatMarkdown(synthesisFinal)}</p>`;
+				els.contentSynthesis.classList.remove('italic', 'text-slate-500');
+				els.contentSynthesis.classList.add('text-slate-300');
 			} catch (err) {
-				els.synthesisOutput.innerHTML = `<span class="text-red-600 font-semibold">Moderator Synthesis Failed:</span> ${err.message}`;
+				els.contentSynthesis.innerHTML = `<span class="text-red-400">Synthesis Failed: ${err.message}</span>`;
+				synthesisFinal = "Synthesis failed due to an error.";
+			}
+
+			// Phase 3: Executive Summary
+			els.executiveOutput.innerHTML = '<span class="italic text-emerald-300">Phase 3: Translating synthesis into executive summary...</span>';
+			
+			try {
+				const execPrompt = `Moderator Synthesis:\n\n${synthesisFinal}`;
+				const executiveFinal = await fetchLLM(state.communicatorPrompt, execPrompt);
+				
+				window.rawOutputs['executiveRaw'] = executiveFinal;
+				historyItem.executive = executiveFinal;
+				els.executiveOutput.innerHTML = `<p>${formatMarkdown(executiveFinal)}</p>`;
+				
+				state.history.push(historyItem);
+				saveState();
+				renderHistory();
+			} catch (err) {
+				els.executiveOutput.innerHTML = `<span class="text-red-400">Executive Summary Failed: ${err.message}</span>`;
 			}
 			
-			// Cleanup UI State
-			els.synthesisIndicator.classList.remove('animate-pulse-fast');
-			els.synthesisIndicator.classList.replace('bg-blue-500', 'bg-emerald-500');
+			els.executiveIndicator.classList.remove('animate-pulse-fast');
 			
 			state.isRunning = false;
 			els.submitBtn.disabled = false;
 			els.submitBtn.innerText = 'Convene Council';
 		}
 
-		// Boot app
 		init();
 	</script>
 </body>
