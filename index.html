@@ -115,7 +115,7 @@
 			<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
 				<label class="text-lg font-bold text-slate-100">Issue to the Council</label>
 				
-				<!-- Engine Selector -->
+				<!-- Hybrid Engine Selector -->
 				<div class="flex gap-2 w-full md:w-auto">
 					<select id="activeProvider" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:flex-none">
 						<option value="openai">OpenAI</option>
@@ -123,7 +123,13 @@
 						<option value="gemini">Google Gemini</option>
 						<option value="deepseek">DeepSeek</option>
 					</select>
-					<input type="text" id="activeModel" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:w-48" placeholder="Model Name">
+					
+					<select id="activeModelSelect" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:w-48">
+						<!-- Populated via JS -->
+					</select>
+					
+					<!-- Hidden input for custom models -->
+					<input type="text" id="activeModelInput" class="hidden p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:w-48" placeholder="Type model ID...">
 				</div>
 			</div>
 
@@ -185,14 +191,15 @@
 	</div>
 
 	<script>
-		// --- State & Defaults ---
-		const defaultModels = {
-			'openai': 'gpt-4o',
-			'anthropic': 'claude-3-5-sonnet-20240620',
-			'gemini': 'gemini-1.5-pro',
-			'deepseek': 'deepseek-chat'
+		// --- Model Definitions ---
+		const providerModels = {
+			'openai': ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+			'anthropic': ['claude-3-5-sonnet-20240620', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+			'gemini': ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro'],
+			'deepseek': ['deepseek-chat', 'deepseek-coder']
 		};
 
+		// --- State & Defaults ---
 		const defaultMembers = [
 			{ id: 1, name: 'Empiricist', prompt: 'You are the Empiricist. Provide only verified data, physics, and raw computational facts. Do not give opinions. Do not hallucinate premises.' },
 			{ id: 2, name: 'Forecaster', prompt: 'You are the Forecaster. Project the 10-, 50-, and 100-year second- and third-order consequences based strictly on the user premise.' },
@@ -203,6 +210,7 @@
 		const state = {
 			provider: 'openai',
 			model: 'gpt-4o',
+			isCustomModel: false,
 			apiKeys: { openai: '', anthropic: '', gemini: '', deepseek: '' },
 			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree, highlight unresolvable disagreements, and provide a final executive summary. You must audit the provided logic. Do not generate original ideas, but explicitly point out if critical information or counter-factual analysis is missing from the council's assessment.",
 			communicatorPrompt: "You are the Executive Communicator. Your job is to read the Moderator's technical Synthesis and translate it into a clear, conversational, and highly succinct summary (like a standard helpful chatbot). Strip out the meta-commentary about the council's process. Just give the user the bottom-line answer, the core risks, and the final verdict in plain, easy-to-digest language. Use bullet points for readability if needed.",
@@ -212,7 +220,7 @@
 		};
 
 		window.rawOutputs = { executiveRaw: "", synthesisRaw: "" };
-		window.currentDebateData = null; // Used for export
+		window.currentDebateData = null; 
 
 		// --- DOM Elements ---
 		const els = {
@@ -223,25 +231,22 @@
 			historyList: document.getElementById('historyList'),
 			clearHistoryBtn: document.getElementById('clearHistoryBtn'),
 			
-			// Keys
 			keyOpenai: document.getElementById('keyOpenai'),
 			keyAnthropic: document.getElementById('keyAnthropic'),
 			keyGemini: document.getElementById('keyGemini'),
 			keyDeepseek: document.getElementById('keyDeepseek'),
 			
-			// Main Inputs
 			activeProvider: document.getElementById('activeProvider'),
-			activeModel: document.getElementById('activeModel'),
+			activeModelSelect: document.getElementById('activeModelSelect'),
+			activeModelInput: document.getElementById('activeModelInput'),
 			userPrompt: document.getElementById('userPrompt'),
 			submitBtn: document.getElementById('submitBtn'),
 			
-			// Configuration
 			councilList: document.getElementById('councilList'),
 			addMemberBtn: document.getElementById('addMemberBtn'),
 			overseerPrompt: document.getElementById('overseerPrompt'),
 			communicatorPrompt: document.getElementById('communicatorPrompt'),
 			
-			// Output Areas
 			executiveContainer: document.getElementById('executiveContainer'),
 			executiveOutput: document.getElementById('executiveOutput'),
 			executiveIndicator: document.getElementById('executiveIndicator'),
@@ -255,21 +260,23 @@
 			const toSave = {
 				provider: state.provider,
 				model: state.model,
+				isCustomModel: state.isCustomModel,
 				apiKeys: state.apiKeys,
 				overseerPrompt: state.overseerPrompt,
 				communicatorPrompt: state.communicatorPrompt,
 				members: state.members,
 				history: state.history
 			};
-			localStorage.setItem('ai_council_data_v3', JSON.stringify(toSave));
+			localStorage.setItem('ai_council_data_v4', JSON.stringify(toSave));
 		}
 
 		function loadState() {
-			const saved = localStorage.getItem('ai_council_data_v3');
+			const saved = localStorage.getItem('ai_council_data_v4') || localStorage.getItem('ai_council_data_v3');
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				state.provider = parsed.provider || state.provider;
 				state.model = parsed.model || state.model;
+				state.isCustomModel = parsed.isCustomModel || false;
 				state.apiKeys = parsed.apiKeys || state.apiKeys;
 				state.overseerPrompt = parsed.overseerPrompt || state.overseerPrompt;
 				state.communicatorPrompt = parsed.communicatorPrompt || state.communicatorPrompt;
@@ -277,20 +284,52 @@
 				state.history = parsed.history || [];
 			}
 			
-			// Hydrate UI
 			els.keyOpenai.value = state.apiKeys.openai;
 			els.keyAnthropic.value = state.apiKeys.anthropic;
 			els.keyGemini.value = state.apiKeys.gemini;
 			els.keyDeepseek.value = state.apiKeys.deepseek;
 			
 			els.activeProvider.value = state.provider;
-			els.activeModel.value = state.model;
-			
 			els.overseerPrompt.value = state.overseerPrompt;
 			els.communicatorPrompt.value = state.communicatorPrompt;
 			
+			updateModelDropdownUI();
 			renderCouncilSettings();
 			renderHistory();
+		}
+
+		// --- UI Updaters ---
+		function updateModelDropdownUI() {
+			els.activeModelSelect.innerHTML = '';
+			const models = providerModels[state.provider] || [];
+			
+			models.forEach(modelStr => {
+				const opt = document.createElement('option');
+				opt.value = modelStr;
+				opt.innerText = modelStr;
+				els.activeModelSelect.appendChild(opt);
+			});
+
+			const customOpt = document.createElement('option');
+			customOpt.value = 'custom';
+			customOpt.innerText = 'Custom Model...';
+			els.activeModelSelect.appendChild(customOpt);
+
+			if (state.isCustomModel) {
+				els.activeModelSelect.value = 'custom';
+				els.activeModelInput.value = state.model;
+				els.activeModelInput.classList.remove('hidden');
+			} else {
+				// If loaded model is in the curated list
+				if (models.includes(state.model)) {
+					els.activeModelSelect.value = state.model;
+				} else {
+					// Fallback if list changed
+					els.activeModelSelect.value = models[0] || 'custom';
+					state.model = els.activeModelSelect.value;
+				}
+				els.activeModelInput.classList.add('hidden');
+			}
 		}
 
 		// --- Initialization ---
@@ -316,33 +355,50 @@
 				}
 			});
 
-			// API Key Event Listeners
+			// API Keys
 			els.keyOpenai.addEventListener('input', (e) => { state.apiKeys.openai = e.target.value; saveState(); });
 			els.keyAnthropic.addEventListener('input', (e) => { state.apiKeys.anthropic = e.target.value; saveState(); });
 			els.keyGemini.addEventListener('input', (e) => { state.apiKeys.gemini = e.target.value; saveState(); });
 			els.keyDeepseek.addEventListener('input', (e) => { state.apiKeys.deepseek = e.target.value; saveState(); });
 
-			// Provider & Model Selection
+			// Provider Dropdown
 			els.activeProvider.addEventListener('change', (e) => {
 				state.provider = e.target.value;
-				els.activeModel.value = defaultModels[state.provider];
-				state.model = els.activeModel.value;
+				state.isCustomModel = false;
+				state.model = providerModels[state.provider][0]; // Reset to default for provider
+				updateModelDropdownUI();
 				saveState();
 			});
-			els.activeModel.addEventListener('input', (e) => { state.model = e.target.value; saveState(); });
 
-			// System Prompts
+			// Model Dropdown
+			els.activeModelSelect.addEventListener('change', (e) => {
+				if (e.target.value === 'custom') {
+					state.isCustomModel = true;
+					els.activeModelInput.classList.remove('hidden');
+					els.activeModelInput.focus();
+					state.model = els.activeModelInput.value;
+				} else {
+					state.isCustomModel = false;
+					els.activeModelInput.classList.add('hidden');
+					state.model = e.target.value;
+				}
+				saveState();
+			});
+
+			// Custom Model Input
+			els.activeModelInput.addEventListener('input', (e) => { 
+				state.model = e.target.value; 
+				saveState(); 
+			});
+
+			// Prompts & Submission
 			els.overseerPrompt.addEventListener('input', (e) => { state.overseerPrompt = e.target.value; saveState(); });
 			els.communicatorPrompt.addEventListener('input', (e) => { state.communicatorPrompt = e.target.value; saveState(); });
-
-			// Members
 			els.addMemberBtn.addEventListener('click', () => {
 				state.members.push({ id: Date.now(), name: 'New Persona', prompt: 'Enter conditioning rules here...' });
 				renderCouncilSettings();
 				saveState();
 			});
-
-			// Submission
 			els.submitBtn.addEventListener('click', runCouncil);
 			els.userPrompt.addEventListener('keydown', (e) => {
 				if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCouncil();
@@ -457,7 +513,7 @@
 			els.executiveOutput.innerHTML = `<p>${formatMarkdown(item.executive)}</p>`;
 
 			els.auditLogContainer.classList.remove('hidden');
-			els.auditLogContainer.removeAttribute('open'); // Start collapsed
+			els.auditLogContainer.removeAttribute('open'); 
 			window.rawOutputs['synthesisRaw'] = item.synthesis;
 			els.contentSynthesis.innerHTML = `<p>${formatMarkdown(item.synthesis)}</p>`;
 			els.contentSynthesis.classList.remove('italic', 'text-slate-500');
@@ -561,6 +617,10 @@
 				els.historyPanel.classList.add('hidden');
 				return alert(`Please enter your ${state.provider.toUpperCase()} API key in settings.`);
 			}
+
+			if (state.isCustomModel && !state.model) {
+				return alert('Please type a model ID into the custom input field.');
+			}
 			
 			state.isRunning = true;
 			els.submitBtn.disabled = true;
@@ -648,7 +708,7 @@
 				
 				window.rawOutputs['executiveRaw'] = executiveFinal;
 				historyItem.executive = executiveFinal;
-				window.currentDebateData = historyItem; // Set for export
+				window.currentDebateData = historyItem; 
 				
 				els.executiveOutput.innerHTML = `<p>${formatMarkdown(executiveFinal)}</p>`;
 				
