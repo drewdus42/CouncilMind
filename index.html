@@ -42,10 +42,10 @@
 				<p class="text-sm text-slate-400">Multi-Agent Debate Framework</p>
 			</div>
 			<div class="flex gap-2">
-				<button id="toggleHistoryBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">
+				<button id="toggleHistoryBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors shadow-sm">
 					📚 History
 				</button>
-				<button id="toggleSettingsBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">
+				<button id="toggleSettingsBtn" class="px-4 py-2 bg-slate-700 text-slate-200 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors shadow-sm">
 					⚙️ Settings
 				</button>
 			</div>
@@ -64,25 +64,24 @@
 
 		<!-- Settings Panel -->
 		<div id="settingsPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-6">
-			<h2 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-2">Configuration</h2>
+			<h2 class="text-xl font-bold text-slate-100 border-b border-slate-700 pb-2">Configuration & API Keys</h2>
 			
-			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-				<div class="lg:col-span-1">
-					<label class="block text-sm font-semibold mb-1 text-slate-400">Provider</label>
-					<select id="providerSelect" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-						<option value="openai">OpenAI</option>
-						<option value="anthropic">Anthropic</option>
-						<option value="gemini">Google Gemini</option>
-						<option value="deepseek">DeepSeek</option>
-					</select>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<label class="block text-sm font-semibold mb-1 text-slate-400">OpenAI API Key</label>
+					<input type="password" id="keyOpenai" placeholder="sk-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 				</div>
-				<div class="lg:col-span-1">
-					<label class="block text-sm font-semibold mb-1 text-slate-400">Model Name</label>
-					<input type="text" id="modelInput" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+				<div>
+					<label class="block text-sm font-semibold mb-1 text-slate-400">Anthropic API Key</label>
+					<input type="password" id="keyAnthropic" placeholder="sk-ant-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 				</div>
-				<div class="lg:col-span-2">
-					<label class="block text-sm font-semibold mb-1 text-slate-400">API Key</label>
-					<input type="password" id="apiKeyInput" placeholder="Stored locally in browser" class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+				<div>
+					<label class="block text-sm font-semibold mb-1 text-slate-400">Google Gemini API Key</label>
+					<input type="password" id="keyGemini" placeholder="AIza..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+				</div>
+				<div>
+					<label class="block text-sm font-semibold mb-1 text-slate-400">DeepSeek API Key</label>
+					<input type="password" id="keyDeepseek" placeholder="sk-..." class="w-full p-2.5 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
 				</div>
 			</div>
 
@@ -112,10 +111,25 @@
 
 		<!-- Main Input Area -->
 		<div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
-			<label class="block text-lg font-bold mb-3 text-slate-100">Issue to the Council</label>
-			<div class="flex flex-col md:flex-row gap-4">
-				<textarea id="userPrompt" rows="3" placeholder="State your premise, dilemma, or question..." class="flex-1 p-4 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-500"></textarea>
-				<button id="submitBtn" class="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition-colors disabled:opacity-50 md:w-auto w-full flex-shrink-0 shadow-lg">
+			
+			<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+				<label class="text-lg font-bold text-slate-100">Issue to the Council</label>
+				
+				<!-- Engine Selector -->
+				<div class="flex gap-2 w-full md:w-auto">
+					<select id="activeProvider" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:flex-none">
+						<option value="openai">OpenAI</option>
+						<option value="anthropic">Anthropic</option>
+						<option value="gemini">Google Gemini</option>
+						<option value="deepseek">DeepSeek</option>
+					</select>
+					<input type="text" id="activeModel" class="p-2 border border-slate-600 rounded-lg bg-slate-900 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-1 md:w-48" placeholder="Model Name">
+				</div>
+			</div>
+
+			<div class="flex flex-col gap-4">
+				<textarea id="userPrompt" rows="3" placeholder="State your premise, dilemma, or question..." class="w-full p-4 border border-slate-600 rounded-lg bg-slate-900 text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 text-base placeholder-slate-500"></textarea>
+				<button id="submitBtn" class="w-full py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-500 transition-colors disabled:opacity-50 shadow-lg text-lg">
 					Convene Council
 				</button>
 			</div>
@@ -128,9 +142,10 @@
 					<h2 class="text-2xl font-bold text-emerald-400 tracking-tight">Executive Summary</h2>
 					<span id="executiveIndicator" class="w-3 h-3 rounded-full bg-emerald-500 hidden"></span>
 				</div>
-				<button onclick="copyRawText('executiveRaw')" class="text-slate-400 hover:text-white transition-colors p-2" title="Copy Summary">
-					📋
-				</button>
+				<div class="flex gap-2">
+					<button onclick="copyRawText('executiveRaw')" class="text-slate-400 hover:text-white transition-colors p-2" title="Copy Summary">📋</button>
+					<button onclick="exportCurrentDebate()" class="text-slate-400 hover:text-emerald-400 transition-colors p-2" title="Export Full Debate (.md)">💾</button>
+				</div>
 			</div>
 			<div id="executiveOutput" class="markdown-content text-slate-200 text-lg leading-relaxed"></div>
 		</div>
@@ -188,7 +203,7 @@
 		const state = {
 			provider: 'openai',
 			model: 'gpt-4o',
-			apiKey: '',
+			apiKeys: { openai: '', anthropic: '', gemini: '', deepseek: '' },
 			overseerPrompt: "You are the Moderator. Read the council debate. Map where they agree, highlight unresolvable disagreements, and provide a final executive summary. You must audit the provided logic. Do not generate original ideas, but explicitly point out if critical information or counter-factual analysis is missing from the council's assessment.",
 			communicatorPrompt: "You are the Executive Communicator. Your job is to read the Moderator's technical Synthesis and translate it into a clear, conversational, and highly succinct summary (like a standard helpful chatbot). Strip out the meta-commentary about the council's process. Just give the user the bottom-line answer, the core risks, and the final verdict in plain, easy-to-digest language. Use bullet points for readability if needed.",
 			members: JSON.parse(JSON.stringify(defaultMembers)),
@@ -197,6 +212,7 @@
 		};
 
 		window.rawOutputs = { executiveRaw: "", synthesisRaw: "" };
+		window.currentDebateData = null; // Used for export
 
 		// --- DOM Elements ---
 		const els = {
@@ -206,15 +222,26 @@
 			historyPanel: document.getElementById('historyPanel'),
 			historyList: document.getElementById('historyList'),
 			clearHistoryBtn: document.getElementById('clearHistoryBtn'),
-			providerSelect: document.getElementById('providerSelect'),
-			modelInput: document.getElementById('modelInput'),
-			apiKeyInput: document.getElementById('apiKeyInput'),
+			
+			// Keys
+			keyOpenai: document.getElementById('keyOpenai'),
+			keyAnthropic: document.getElementById('keyAnthropic'),
+			keyGemini: document.getElementById('keyGemini'),
+			keyDeepseek: document.getElementById('keyDeepseek'),
+			
+			// Main Inputs
+			activeProvider: document.getElementById('activeProvider'),
+			activeModel: document.getElementById('activeModel'),
+			userPrompt: document.getElementById('userPrompt'),
+			submitBtn: document.getElementById('submitBtn'),
+			
+			// Configuration
 			councilList: document.getElementById('councilList'),
 			addMemberBtn: document.getElementById('addMemberBtn'),
 			overseerPrompt: document.getElementById('overseerPrompt'),
 			communicatorPrompt: document.getElementById('communicatorPrompt'),
-			userPrompt: document.getElementById('userPrompt'),
-			submitBtn: document.getElementById('submitBtn'),
+			
+			// Output Areas
 			executiveContainer: document.getElementById('executiveContainer'),
 			executiveOutput: document.getElementById('executiveOutput'),
 			executiveIndicator: document.getElementById('executiveIndicator'),
@@ -228,33 +255,40 @@
 			const toSave = {
 				provider: state.provider,
 				model: state.model,
-				apiKey: state.apiKey,
+				apiKeys: state.apiKeys,
 				overseerPrompt: state.overseerPrompt,
 				communicatorPrompt: state.communicatorPrompt,
 				members: state.members,
 				history: state.history
 			};
-			localStorage.setItem('ai_council_data_v2', JSON.stringify(toSave));
+			localStorage.setItem('ai_council_data_v3', JSON.stringify(toSave));
 		}
 
 		function loadState() {
-			const saved = localStorage.getItem('ai_council_data_v2') || localStorage.getItem('ai_council_data');
+			const saved = localStorage.getItem('ai_council_data_v3');
 			if (saved) {
 				const parsed = JSON.parse(saved);
 				state.provider = parsed.provider || state.provider;
 				state.model = parsed.model || state.model;
-				state.apiKey = parsed.apiKey || state.apiKey;
+				state.apiKeys = parsed.apiKeys || state.apiKeys;
 				state.overseerPrompt = parsed.overseerPrompt || state.overseerPrompt;
 				state.communicatorPrompt = parsed.communicatorPrompt || state.communicatorPrompt;
 				state.members = parsed.members && parsed.members.length > 0 ? parsed.members : state.members;
 				state.history = parsed.history || [];
 			}
 			
-			els.providerSelect.value = state.provider;
-			els.modelInput.value = state.model;
-			els.apiKeyInput.value = state.apiKey;
+			// Hydrate UI
+			els.keyOpenai.value = state.apiKeys.openai;
+			els.keyAnthropic.value = state.apiKeys.anthropic;
+			els.keyGemini.value = state.apiKeys.gemini;
+			els.keyDeepseek.value = state.apiKeys.deepseek;
+			
+			els.activeProvider.value = state.provider;
+			els.activeModel.value = state.model;
+			
 			els.overseerPrompt.value = state.overseerPrompt;
 			els.communicatorPrompt.value = state.communicatorPrompt;
+			
 			renderCouncilSettings();
 			renderHistory();
 		}
@@ -263,6 +297,7 @@
 		function init() {
 			loadState();
 
+			// Panel Toggles
 			els.toggleSettingsBtn.addEventListener('click', () => {
 				els.settingsPanel.classList.toggle('hidden');
 				els.historyPanel.classList.add('hidden');
@@ -281,24 +316,33 @@
 				}
 			});
 
-			els.providerSelect.addEventListener('change', (e) => {
+			// API Key Event Listeners
+			els.keyOpenai.addEventListener('input', (e) => { state.apiKeys.openai = e.target.value; saveState(); });
+			els.keyAnthropic.addEventListener('input', (e) => { state.apiKeys.anthropic = e.target.value; saveState(); });
+			els.keyGemini.addEventListener('input', (e) => { state.apiKeys.gemini = e.target.value; saveState(); });
+			els.keyDeepseek.addEventListener('input', (e) => { state.apiKeys.deepseek = e.target.value; saveState(); });
+
+			// Provider & Model Selection
+			els.activeProvider.addEventListener('change', (e) => {
 				state.provider = e.target.value;
-				els.modelInput.value = defaultModels[state.provider];
-				state.model = els.modelInput.value;
+				els.activeModel.value = defaultModels[state.provider];
+				state.model = els.activeModel.value;
 				saveState();
 			});
+			els.activeModel.addEventListener('input', (e) => { state.model = e.target.value; saveState(); });
 
-			els.modelInput.addEventListener('input', (e) => { state.model = e.target.value; saveState(); });
-			els.apiKeyInput.addEventListener('input', (e) => { state.apiKey = e.target.value; saveState(); });
+			// System Prompts
 			els.overseerPrompt.addEventListener('input', (e) => { state.overseerPrompt = e.target.value; saveState(); });
 			els.communicatorPrompt.addEventListener('input', (e) => { state.communicatorPrompt = e.target.value; saveState(); });
 
+			// Members
 			els.addMemberBtn.addEventListener('click', () => {
 				state.members.push({ id: Date.now(), name: 'New Persona', prompt: 'Enter conditioning rules here...' });
 				renderCouncilSettings();
 				saveState();
 			});
 
+			// Submission
 			els.submitBtn.addEventListener('click', runCouncil);
 			els.userPrompt.addEventListener('keydown', (e) => {
 				if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runCouncil();
@@ -363,7 +407,35 @@
 			navigator.clipboard.writeText(text);
 		};
 
+		window.exportCurrentDebate = () => {
+			if (!window.currentDebateData) return alert("No active debate to export.");
+			
+			const d = window.currentDebateData;
+			let markdown = `# AI Council Debate Export\n\n`;
+			markdown += `**Date:** ${new Date(d.timestamp).toLocaleString()}\n`;
+			markdown += `**Provider/Model:** ${d.provider} (${d.model})\n\n`;
+			markdown += `---\n\n## 📝 User Prompt\n\n${d.prompt}\n\n`;
+			markdown += `---\n\n## 🎯 Phase 3: Executive Summary\n\n${d.executive}\n\n`;
+			markdown += `---\n\n## ⚖️ Phase 2: Moderator Synthesis & Audit\n\n${d.synthesis}\n\n`;
+			markdown += `---\n\n## 🗣️ Phase 1: Raw Council Transcripts\n\n`;
+			
+			d.council.forEach(member => {
+				markdown += `### [ ${member.name} ]\n\n${member.raw}\n\n`;
+			});
+
+			const blob = new Blob([markdown], { type: 'text/markdown' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `council_debate_${d.timestamp}.md`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		};
+
 		function loadHistoryItem(item) {
+			window.currentDebateData = item;
 			els.userPrompt.value = item.prompt;
 			els.debateGrid.innerHTML = '';
 			
@@ -422,13 +494,14 @@
 		}
 
 		async function fetchLLM(systemPrompt, userPrompt) {
-			if (!state.apiKey) throw new Error("API Key is missing.");
+			const apiKey = state.apiKeys[state.provider];
+			if (!apiKey) throw new Error(`API Key for ${state.provider} is missing. Please add it in settings.`);
 			
 			if (state.provider === 'openai' || state.provider === 'deepseek') {
 				const endpoint = state.provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://api.deepseek.com/chat/completions';
 				const res = await fetch(endpoint, {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.apiKey}` },
+					headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
 					body: JSON.stringify({
 						model: state.model,
 						messages: [
@@ -447,7 +520,7 @@
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-api-key': state.apiKey,
+						'x-api-key': apiKey,
 						'anthropic-version': '2023-06-01',
 						'anthropic-dangerous-direct-browser-access': 'true'
 					},
@@ -464,7 +537,7 @@
 			}
 			
 			if (state.provider === 'gemini') {
-				const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${state.apiKey}`, {
+				const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${state.model}:generateContent?key=${apiKey}`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
@@ -481,10 +554,12 @@
 		async function runCouncil() {
 			const promptText = els.userPrompt.value.trim();
 			if(!promptText) return alert('Please enter a premise for the council.');
-			if(!state.apiKey) {
+			
+			const apiKey = state.apiKeys[state.provider];
+			if(!apiKey) {
 				els.settingsPanel.classList.remove('hidden');
-				els.apiKeyInput.focus();
-				return alert('Please enter your API key.');
+				els.historyPanel.classList.add('hidden');
+				return alert(`Please enter your ${state.provider.toUpperCase()} API key in settings.`);
 			}
 			
 			state.isRunning = true;
@@ -505,7 +580,15 @@
 			els.auditLogContainer.removeAttribute('open');
 			els.contentSynthesis.innerHTML = '<span class="italic text-slate-500">Awaiting council transcripts...</span>';
 			
-			const historyItem = { timestamp: Date.now(), prompt: promptText, council: [], synthesis: "", executive: "" };
+			const historyItem = { 
+				timestamp: Date.now(), 
+				prompt: promptText, 
+				provider: state.provider,
+				model: state.model,
+				council: [], 
+				synthesis: "", 
+				executive: "" 
+			};
 			
 			// Phase 1: Fan-out
 			let transcriptBuilder = "";
@@ -565,6 +648,8 @@
 				
 				window.rawOutputs['executiveRaw'] = executiveFinal;
 				historyItem.executive = executiveFinal;
+				window.currentDebateData = historyItem; // Set for export
+				
 				els.executiveOutput.innerHTML = `<p>${formatMarkdown(executiveFinal)}</p>`;
 				
 				state.history.push(historyItem);
